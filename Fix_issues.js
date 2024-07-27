@@ -105,3 +105,4 @@ components:
           type: integer  
         type:
           $ref: '#/components/schemas/AnalyzeIssueResponse/properties/classification'
+   
