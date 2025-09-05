@@ -274,7 +274,7 @@ class TwoFactorService {
         await db
           .update(twoFactorAuth)
           .set({ lastUsedAt: new Date() })
-          .where(eq(twoFactorAuth.userId, userId));
+          .where(eq(twoFactorAuth.userId, request.userId));
       } else {
         // Increment attempts
         await db
