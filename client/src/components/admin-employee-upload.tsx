@@ -82,10 +82,10 @@ export default function AdminEmployeeUpload() {
   };
 
   const downloadTemplate = () => {
-    const template = `employee_id,first_name,last_name,date_of_birth,email,department,position,hire_date,employment_type,phone
-EMP001,John,Doe,01/15/1985,john.doe@gov.org,IT,Software Engineer,06/01/2020,full-time,555-0101
-EMP002,Jane,Smith,03/22/1990,jane.smith@gov.org,Finance,Accountant,09/15/2021,full-time,555-0102
-EMP003,Robert,Johnson,11/08/1988,robert.j@gov.org,HR,HR Manager,03/01/2019,full-time,555-0103`;
+    const template = `employee_id,first_name,last_name,middle_name,date_of_birth,email,department,position,hire_date,employment_type,phone,ssn_last4,federal_grade,federal_step,clearance_level,veteran_status,gender,ethnicity,race
+EMP001,John,A,Doe,01/15/1985,john.doe@gov.org,IT,Software Engineer,06/01/2020,full-time,555-0101,1234,GS-13,5,secret,true,male,not-hispanic-or-latino,white
+EMP002,Jane,M,Smith,03/22/1990,jane.smith@gov.org,Finance,Accountant,09/15/2021,full-time,555-0102,5678,GS-11,3,confidential,false,female,hispanic-or-latino,asian
+EMP003,Robert,,Johnson,11/08/1988,robert.j@gov.org,HR,HR Manager,03/01/2019,full-time,555-0103,9012,GS-14,7,top-secret,true,male,not-hispanic-or-latino,black`;
     
     const blob = new Blob([template], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
@@ -166,9 +166,12 @@ EMP003,Robert,Johnson,11/08/1988,robert.j@gov.org,HR,HR Manager,03/01/2019,full-
                 <AlertDescription>
                   <strong>CSV Format Requirements:</strong>
                   <ul className="mt-2 text-sm list-disc list-inside">
-                    <li>Required columns: employee_id, first_name, last_name, date_of_birth (MM/DD/YYYY), email, department, position, hire_date (MM/DD/YYYY)</li>
-                    <li>Optional columns: employment_type, phone</li>
-                    <li>First row must contain column headers</li>
+                    <li><strong>Required:</strong> employee_id, first_name, last_name, date_of_birth, email, department, position, hire_date, employment_type</li>
+                    <li><strong>Government Fields:</strong> federal_grade (GS-1 to GS-15), federal_step (1-10), clearance_level (none/confidential/secret/top-secret)</li>
+                    <li><strong>Demographics:</strong> gender, ethnicity (hispanic-or-latino/not-hispanic-or-latino), race, citizenship_status</li>
+                    <li><strong>Military:</strong> veteran_status (true/false), military_branch, military_rank, discharge_type</li>
+                    <li><strong>Contact:</strong> phone, mobile_phone, work_phone, address, city, state, zip_code</li>
+                    <li><strong>Other:</strong> ssn_last4, middle_name, suffix, occupational_series</li>
                     <li>Date format must be MM/DD/YYYY</li>
                   </ul>
                 </AlertDescription>

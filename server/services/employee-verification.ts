@@ -4,7 +4,7 @@ import { eq, and, sql } from "drizzle-orm";
 import * as bcrypt from "bcryptjs";
 
 export class EmployeeVerificationService {
-  // Parse CSV and bulk create employees
+  // Parse CSV and bulk create employees with comprehensive government fields
   async uploadEmployees(csvData: string, organizationId: string): Promise<{
     success: number;
     errors: string[];
@@ -26,68 +26,119 @@ export class EmployeeVerificationService {
     // Process each row
     for (let i = 1; i < lines.length; i++) {
       const values = lines[i].split(',').map(v => v.trim());
-      const employee: any = {};
+      const employeeData: any = {};
       
       // Map values to headers
       headers.forEach((header, index) => {
-        employee[header] = values[index];
+        employeeData[header] = values[index];
       });
       
       try {
         // Parse and validate date
-        const dobParts = employee.date_of_birth.split('/');
+        const dobParts = employeeData.date_of_birth.split('/');
         const dob = new Date(
           parseInt(dobParts[2]), 
           parseInt(dobParts[0]) - 1, 
           parseInt(dobParts[1])
         );
         
-        const hireDateParts = employee.hire_date.split('/');
+        const hireDateParts = employeeData.hire_date.split('/');
         const hireDate = new Date(
           parseInt(hireDateParts[2]),
           parseInt(hireDateParts[0]) - 1,
           parseInt(hireDateParts[1])
         );
         
+        // Build employee record with comprehensive fields
+        const employeeRecord: any = {
+          organizationId,
+          employeeId: employeeData.employee_id,
+          firstName: employeeData.first_name,
+          lastName: employeeData.last_name,
+          dateOfBirth: dob,
+          email: employeeData.email,
+          department: employeeData.department,
+          position: employeeData.position,
+          hireDate: hireDate,
+          startDate: hireDate,
+          employmentType: employeeData.employment_type || 'full-time',
+          employmentStatus: 'active',
+          isVerified: false,
+          verificationAttempts: 0,
+          verificationMethod: 'csv-upload',
+          importSource: 'csv',
+          importDate: new Date(),
+        };
+        
+        // Add optional personal fields
+        if (employeeData.middle_name) employeeRecord.middleName = employeeData.middle_name;
+        if (employeeData.suffix) employeeRecord.suffix = employeeData.suffix;
+        if (employeeData.phone) employeeRecord.phone = employeeData.phone;
+        if (employeeData.ssn_last4) employeeRecord.ssn = employeeData.ssn_last4.slice(-4);
+        
+        // Add demographics
+        if (employeeData.gender) employeeRecord.gender = employeeData.gender;
+        if (employeeData.ethnicity) employeeRecord.ethnicity = employeeData.ethnicity;
+        if (employeeData.race) {
+          employeeRecord.race = employeeData.race.includes(';') 
+            ? employeeData.race.split(';').map((r: string) => r.trim())
+            : [employeeData.race];
+        }
+        if (employeeData.citizenship_status) employeeRecord.citizenshipStatus = employeeData.citizenship_status;
+        if (employeeData.disability_status) employeeRecord.disabilityStatus = employeeData.disability_status;
+        if (employeeData.marital_status) employeeRecord.maritalStatus = employeeData.marital_status;
+        
+        // Add federal employment fields
+        if (employeeData.federal_grade) employeeRecord.federalGrade = employeeData.federal_grade;
+        if (employeeData.federal_step) employeeRecord.federalStep = parseInt(employeeData.federal_step);
+        if (employeeData.occupational_series) employeeRecord.occupationalSeries = employeeData.occupational_series;
+        if (employeeData.bargaining_unit) employeeRecord.bargainingUnit = employeeData.bargaining_unit;
+        if (employeeData.flsa_status) employeeRecord.flsaStatus = employeeData.flsa_status;
+        if (employeeData.appointment_type) employeeRecord.appointmentType = employeeData.appointment_type;
+        
+        // Add security clearance
+        if (employeeData.clearance_level) employeeRecord.clearanceLevel = employeeData.clearance_level;
+        if (employeeData.clearance_status) employeeRecord.clearanceStatus = employeeData.clearance_status;
+        
+        // Add military/veteran fields
+        if (employeeData.veteran_status !== undefined) {
+          employeeRecord.veteranStatus = employeeData.veteran_status === 'true' || employeeData.veteran_status === '1';
+        }
+        if (employeeData.military_branch) employeeRecord.militaryBranch = employeeData.military_branch;
+        if (employeeData.military_rank) employeeRecord.militaryRank = employeeData.military_rank;
+        if (employeeData.discharge_type) employeeRecord.militaryDischargeType = employeeData.discharge_type;
+        if (employeeData.disability_rating) employeeRecord.militaryDisabilityRating = parseInt(employeeData.disability_rating);
+        
+        // Add address fields
+        if (employeeData.address) employeeRecord.address = employeeData.address;
+        if (employeeData.city) employeeRecord.city = employeeData.city;
+        if (employeeData.state) employeeRecord.state = employeeData.state;
+        if (employeeData.zip_code) employeeRecord.zipCode = employeeData.zip_code;
+        if (employeeData.county) employeeRecord.county = employeeData.county;
+        
+        // Add compensation fields
+        if (employeeData.salary) employeeRecord.salary = parseFloat(employeeData.salary);
+        if (employeeData.pay_frequency) employeeRecord.payFrequency = employeeData.pay_frequency;
+        if (employeeData.locality_pay_area) employeeRecord.localityPayArea = employeeData.locality_pay_area;
+        
         // Check if employee already exists
         const existing = await db.select()
           .from(employees)
-          .where(eq(employees.employeeId, employee.employee_id));
+          .where(eq(employees.employeeId, employeeData.employee_id));
         
         if (existing.length > 0) {
           // Update existing employee
+          delete employeeRecord.organizationId; // Don't update org ID
+          delete employeeRecord.verificationAttempts; // Keep existing attempts
           await db.update(employees)
             .set({
-              firstName: employee.first_name,
-              lastName: employee.last_name,
-              dateOfBirth: dob,
-              email: employee.email,
-              department: employee.department,
-              position: employee.position,
-              hireDate: hireDate,
-              startDate: hireDate,
-              employmentType: employee.employment_type || 'full-time',
-              phone: employee.phone || null,
+              ...employeeRecord,
+              updatedAt: new Date(),
             })
-            .where(eq(employees.employeeId, employee.employee_id));
+            .where(eq(employees.employeeId, employeeData.employee_id));
         } else {
           // Insert new employee
-          await db.insert(employees).values({
-            organizationId,
-            employeeId: employee.employee_id,
-            firstName: employee.first_name,
-            lastName: employee.last_name,
-            dateOfBirth: dob,
-            email: employee.email,
-            department: employee.department,
-            position: employee.position,
-            hireDate: hireDate,
-            startDate: hireDate,
-            employmentType: employee.employment_type || 'full-time',
-            employmentStatus: 'active',
-            isVerified: false,
-            verificationAttempts: 0,
-          });
+          await db.insert(employees).values(employeeRecord);
         }
         
         successCount++;

@@ -368,54 +368,168 @@ export const citizenServices = pgTable("citizen_services", {
 
 // ========== HR MANAGEMENT ==========
 
-// Employee profiles with full HR data
+// Employee profiles with comprehensive government HR data
 export const employees = pgTable('employees', {
   id: varchar('id').primaryKey().default(sql`gen_random_uuid()`),
   organizationId: varchar('organization_id').notNull().references(() => organizations.id),
   userId: varchar('user_id').references(() => users.id), // Linked after verification
   employeeId: varchar('employee_id').notNull().unique(),
-  department: varchar('department').notNull(),
-  position: varchar('position').notNull(),
-  level: varchar('level'), // junior, mid, senior, lead, manager, director
   
-  // Personal Information (for verification)
+  // ========== PERSONAL INFORMATION ==========
   firstName: varchar('first_name').notNull(),
   lastName: varchar('last_name').notNull(),
+  middleName: varchar('middle_name'),
+  preferredName: varchar('preferred_name'),
+  suffix: varchar('suffix'), // Jr., Sr., III, etc.
   dateOfBirth: timestamp('date_of_birth').notNull(), // For verification
-  email: varchar('email').notNull().unique(),
-  phone: varchar('phone'),
-  emergencyContact: jsonb('emergency_contact'),
-  address: text('address'),
+  ssn: varchar('ssn'), // Encrypted - last 4 digits only for display
   
-  // Verification Status
+  // ========== DEMOGRAPHICS (EEO/Federal Requirements) ==========
+  gender: varchar('gender'), // male, female, non-binary, prefer-not-to-say
+  ethnicity: varchar('ethnicity'), // hispanic-or-latino, not-hispanic-or-latino
+  race: text('race').array(), // Can select multiple: white, black, asian, american-indian, pacific-islander
+  citizenshipStatus: varchar('citizenship_status'), // us-citizen, permanent-resident, work-visa, other
+  countryOfCitizenship: varchar('country_of_citizenship'),
+  disabilityStatus: varchar('disability_status'), // yes, no, prefer-not-to-say
+  maritalStatus: varchar('marital_status'), // single, married, divorced, widowed, separated
+  
+  // ========== CONTACT INFORMATION ==========
+  email: varchar('email').notNull().unique(),
+  personalEmail: varchar('personal_email'),
+  phone: varchar('phone'),
+  mobilePhone: varchar('mobile_phone'),
+  workPhone: varchar('work_phone'),
+  workPhoneExtension: varchar('work_phone_ext'),
+  
+  // ========== ADDRESS INFORMATION ==========
+  address: text('address'),
+  addressLine2: varchar('address_line2'),
+  city: varchar('city'),
+  state: varchar('state'),
+  zipCode: varchar('zip_code'),
+  county: varchar('county'),
+  country: varchar('country').default('USA'),
+  
+  // Mailing Address (if different)
+  mailingAddress: text('mailing_address'),
+  mailingCity: varchar('mailing_city'),
+  mailingState: varchar('mailing_state'),
+  mailingZipCode: varchar('mailing_zip_code'),
+  
+  // ========== EMERGENCY CONTACT ==========
+  emergencyContact: jsonb('emergency_contact'), // {name, relationship, phone, altPhone, address}
+  emergencyContact2: jsonb('emergency_contact2'), // Secondary emergency contact
+  
+  // ========== FEDERAL EMPLOYMENT SPECIFIC ==========
+  federalGrade: varchar('federal_grade'), // GS-1 through GS-15, SES, etc.
+  federalStep: integer('federal_step'), // 1-10 for GS employees
+  occupationalSeries: varchar('occupational_series'), // 4-digit OPM series code
+  bargainingUnit: varchar('bargaining_unit'), // Union representation
+  flsaStatus: varchar('flsa_status'), // exempt, non-exempt
+  appointmentType: varchar('appointment_type'), // permanent, term, temporary, seasonal
+  serviceComputationDate: timestamp('service_computation_date'), // For retirement calculations
+  credibleServiceYears: integer('credible_service_years'),
+  
+  // ========== SECURITY CLEARANCE ==========
+  clearanceLevel: varchar('clearance_level'), // none, public-trust, confidential, secret, top-secret, sci
+  clearanceGrantDate: timestamp('clearance_grant_date'),
+  clearanceExpirationDate: timestamp('clearance_expiration_date'),
+  clearanceInvestigationType: varchar('clearance_investigation_type'), // NACLC, SSBI, etc.
+  clearanceStatus: varchar('clearance_status'), // active, expired, pending, suspended, revoked
+  
+  // ========== MILITARY/VETERAN STATUS ==========
+  veteranStatus: boolean('veteran_status').default(false),
+  militaryBranch: varchar('military_branch'), // army, navy, air-force, marines, coast-guard, space-force
+  militaryRank: varchar('military_rank'),
+  militaryServiceStartDate: timestamp('military_service_start'),
+  militaryServiceEndDate: timestamp('military_service_end'),
+  militaryDischargeType: varchar('military_discharge_type'), // honorable, general, other-than-honorable, bad-conduct, dishonorable
+  militaryDisabilityRating: integer('military_disability_rating'), // VA disability percentage
+  activeReserve: boolean('active_reserve').default(false),
+  
+  // ========== EMPLOYMENT DETAILS ==========
+  department: varchar('department').notNull(),
+  division: varchar('division'),
+  position: varchar('position').notNull(),
+  positionTitle: varchar('position_title'), // Official HR title
+  level: varchar('level'), // junior, mid, senior, lead, manager, director, executive
+  
+  // Employment Dates
+  hireDate: timestamp('hire_date').notNull(),
+  startDate: timestamp('start_date').notNull(),
+  probationEndDate: timestamp('probation_end_date'),
+  endDate: timestamp('end_date'),
+  retirementEligibilityDate: timestamp('retirement_eligibility_date'),
+  
+  // Employment Type & Status
+  employmentType: varchar('employment_type').notNull(), // full-time, part-time, contract, temp, seasonal
+  employmentStatus: varchar('employment_status').notNull().default('active'), // active, on-leave, terminated, retired
+  workSchedule: varchar('work_schedule'), // regular, compressed, flexible, telework
+  teleworkEligible: boolean('telework_eligible').default(false),
+  teleworkAgreement: jsonb('telework_agreement'), // Agreement details
+  
+  // ========== COMPENSATION & BENEFITS ==========
+  salary: decimal('salary', { precision: 10, scale: 2 }),
+  hourlyRate: decimal('hourly_rate', { precision: 10, scale: 2 }),
+  payFrequency: varchar('pay_frequency'), // weekly, bi-weekly, monthly
+  payType: varchar('pay_type'), // salary, hourly
+  localityPayArea: varchar('locality_pay_area'), // Federal locality pay area
+  
+  // Benefits
+  benefits: jsonb('benefits'), // Detailed benefits enrollment
+  healthPlan: varchar('health_plan'),
+  dentalPlan: varchar('dental_plan'),
+  visionPlan: varchar('vision_plan'),
+  lifePlan: varchar('life_plan'),
+  retirementPlan: varchar('retirement_plan'), // FERS, CSRS, TSP, etc.
+  tspContribution: decimal('tsp_contribution', { precision: 5, scale: 2 }), // Percentage
+  fersCode: varchar('fers_code'), // Federal retirement code
+  
+  // ========== LEAVE BALANCES ==========
+  annualLeaveBalance: decimal('annual_leave_balance', { precision: 6, scale: 2 }),
+  sickLeaveBalance: decimal('sick_leave_balance', { precision: 6, scale: 2 }),
+  compTimeBalance: decimal('comp_time_balance', { precision: 6, scale: 2 }),
+  creditHours: decimal('credit_hours', { precision: 5, scale: 2 }),
+  
+  // ========== ORGANIZATIONAL STRUCTURE ==========
+  managerId: varchar('manager_id').references(() => employees.id),
+  teamId: varchar('team_id'),
+  locationId: varchar('location_id'),
+  workLocationAddress: text('work_location_address'),
+  deskLocation: varchar('desk_location'),
+  
+  // ========== EDUCATION & CERTIFICATIONS ==========
+  educationLevel: varchar('education_level'), // high-school, associates, bachelors, masters, doctorate
+  educationDetails: jsonb('education_details'), // Array of education records
+  professionalCertifications: jsonb('professional_certifications'), // Array of certifications
+  licenses: jsonb('licenses'), // Professional licenses
+  
+  // ========== PERFORMANCE & DEVELOPMENT ==========
+  lastReviewDate: timestamp('last_review_date'),
+  nextReviewDate: timestamp('next_review_date'),
+  performanceRating: decimal('performance_rating', { precision: 3, scale: 2 }),
+  performanceImprovement: boolean('performance_improvement').default(false),
+  developmentPlan: jsonb('development_plan'),
+  
+  // ========== VERIFICATION STATUS ==========
   isVerified: boolean('is_verified').default(false),
   verificationAttempts: integer('verification_attempts').default(0),
   lastVerificationAttempt: timestamp('last_verification_attempt'),
   verifiedAt: timestamp('verified_at'),
+  verificationMethod: varchar('verification_method'), // csv-upload, manual, api
   
-  // Employment Details
-  hireDate: timestamp('hire_date').notNull(),
-  startDate: timestamp('start_date').notNull(),
-  endDate: timestamp('end_date'),
-  employmentType: varchar('employment_type').notNull(), // full-time, part-time, contract, temp
-  employmentStatus: varchar('employment_status').notNull().default('active'), // active, on-leave, terminated
+  // ========== COMPLIANCE & TRAINING ==========
+  mandatoryTraining: jsonb('mandatory_training'), // Required training status
+  ethicsFilingRequired: boolean('ethics_filing_required').default(false),
+  ethicsFilingDate: timestamp('ethics_filing_date'),
+  lastBackgroundCheck: timestamp('last_background_check'),
+  nextBackgroundCheck: timestamp('next_background_check'),
   
-  // Compensation
-  salary: decimal('salary', { precision: 10, scale: 2 }),
-  payFrequency: varchar('pay_frequency'), // weekly, bi-weekly, monthly
-  benefits: jsonb('benefits'),
-  
-  // Manager and Team
-  managerId: varchar('manager_id').references(() => employees.id),
-  teamId: varchar('team_id'),
-  locationId: varchar('location_id'),
-  
-  // Performance
-  lastReviewDate: timestamp('last_review_date'),
-  nextReviewDate: timestamp('next_review_date'),
-  performanceRating: decimal('performance_rating', { precision: 3, scale: 2 }),
-  
+  // ========== METADATA ==========
   metadata: jsonb('metadata'),
+  importSource: varchar('import_source'), // csv, manual, api, migration
+  importDate: timestamp('import_date'),
+  lastModifiedBy: varchar('last_modified_by'),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
 });
