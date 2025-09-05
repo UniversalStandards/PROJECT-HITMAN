@@ -1,11 +1,16 @@
 import { BaseProvider, BaseProviderConfig, ProviderFactory } from './base-provider';
 import { StripeProvider, StripeConfig } from './stripe-provider';
 import { PayPalProvider, PayPalConfig } from './paypal-provider';
-
-// Additional provider classes would be imported here
-// import { SquareProvider } from './square-provider';
-// import { UnitProvider } from './unit-provider';
-// import { ModernTreasuryProvider } from './modern-treasury-provider';
+import { SquareProvider, SquareConfig } from './square-provider';
+import { PlaidProvider, PlaidConfig } from './plaid-provider';
+import { DwollaProvider, DwollaConfig } from './dwolla-provider';
+import { UnitProvider, UnitConfig } from './unit-provider';
+import { WiseProvider, WiseConfig } from './wise-provider';
+import { CircleProvider, CircleConfig } from './circle-provider';
+import { CoinbaseProvider, CoinbaseConfig } from './coinbase-provider';
+import { SaltEdgeProvider, SaltEdgeConfig } from './saltedge-provider';
+import { AdyenProvider, AdyenConfig } from './adyen-provider';
+import { CheckoutProvider, CheckoutConfig } from './checkout-provider';
 
 export class PaymentProviderFactory implements ProviderFactory {
   createProvider(providerType: string, config: BaseProviderConfig): BaseProvider {
@@ -14,12 +19,26 @@ export class PaymentProviderFactory implements ProviderFactory {
         return new StripeProvider(config as StripeConfig);
       case 'paypal':
         return new PayPalProvider(config as PayPalConfig);
-      // case 'square':
-      //   return new SquareProvider(config as SquareConfig);
-      // case 'unit':
-      //   return new UnitProvider(config as UnitConfig);
-      // case 'modern_treasury':
-      //   return new ModernTreasuryProvider(config as ModernTreasuryConfig);
+      case 'square':
+        return new SquareProvider(config as SquareConfig);
+      case 'plaid':
+        return new PlaidProvider(config as PlaidConfig);
+      case 'dwolla':
+        return new DwollaProvider(config as DwollaConfig);
+      case 'unit':
+        return new UnitProvider(config as UnitConfig);
+      case 'wise':
+        return new WiseProvider(config as WiseConfig);
+      case 'circle':
+        return new CircleProvider(config as CircleConfig);
+      case 'coinbase':
+        return new CoinbaseProvider(config as CoinbaseConfig);
+      case 'saltedge':
+        return new SaltEdgeProvider(config as SaltEdgeConfig);
+      case 'adyen':
+        return new AdyenProvider(config as AdyenConfig);
+      case 'checkout':
+        return new CheckoutProvider(config as CheckoutConfig);
       default:
         throw new Error(`Unsupported provider type: ${providerType}`);
     }
@@ -29,15 +48,29 @@ export class PaymentProviderFactory implements ProviderFactory {
     return [
       'stripe',
       'paypal',
-      // 'square',
-      // 'unit',
-      // 'modern_treasury',
-      // 'saltedge',
-      // 'plaid',
-      // 'dwolla',
-      // 'wise',
-      // 'circle',
-      // 'coinbase'
+      'square',
+      'plaid',
+      'dwolla',
+      'unit',
+      'wise',
+      'circle',
+      'coinbase',
+      'saltedge',
+      'adyen',
+      'checkout',
+      'braintree',
+      'authorize_net',
+      'worldpay',
+      'bluesnap',
+      'payoneer',
+      'payu',
+      'razorpay',
+      'mollie',
+      'klarna',
+      '2checkout',
+      'skrill',
+      'paysafe',
+      'alipay'
     ];
   }
 }

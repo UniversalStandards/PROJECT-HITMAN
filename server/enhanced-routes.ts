@@ -4,6 +4,7 @@ import type { Express } from "express";
 import { isAuthenticated } from "./replitAuth";
 import { enhancedStorage } from "./enhanced-storage";
 import { serviceRegistry } from "./services/service-registry";
+import bulkOperationsRouter from "./routes/bulk-operations";
 import { z } from "zod";
 import {
   insertPaymentProviderSchema,
@@ -20,6 +21,9 @@ import {
 } from "@shared/schema";
 
 export function registerEnhancedRoutes(app: Express) {
+  // ========== BULK OPERATIONS ROUTES ==========
+  app.use('/api', bulkOperationsRouter);
+  
   // ========== CITIZEN ROUTES ==========
   
   // Public services listing
