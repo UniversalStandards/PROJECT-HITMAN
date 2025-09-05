@@ -366,6 +366,576 @@ export const citizenServices = pgTable("citizen_services", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// ========== HR MANAGEMENT ==========
+
+// Employee profiles with full HR data
+export const employees = pgTable('employees', {
+  id: varchar('id').primaryKey().default(sql`gen_random_uuid()`),
+  organizationId: varchar('organization_id').notNull().references(() => organizations.id),
+  userId: varchar('user_id').references(() => users.id),
+  employeeId: varchar('employee_id').notNull().unique(),
+  department: varchar('department').notNull(),
+  position: varchar('position').notNull(),
+  level: varchar('level'), // junior, mid, senior, lead, manager, director
+  
+  // Personal Information
+  firstName: varchar('first_name').notNull(),
+  lastName: varchar('last_name').notNull(),
+  email: varchar('email').notNull().unique(),
+  phone: varchar('phone'),
+  emergencyContact: jsonb('emergency_contact'),
+  address: text('address'),
+  
+  // Employment Details
+  hireDate: timestamp('hire_date').notNull(),
+  startDate: timestamp('start_date').notNull(),
+  endDate: timestamp('end_date'),
+  employmentType: varchar('employment_type').notNull(), // full-time, part-time, contract, temp
+  employmentStatus: varchar('employment_status').notNull().default('active'), // active, on-leave, terminated
+  
+  // Compensation
+  salary: decimal('salary', { precision: 10, scale: 2 }),
+  payFrequency: varchar('pay_frequency'), // weekly, bi-weekly, monthly
+  benefits: jsonb('benefits'),
+  
+  // Manager and Team
+  managerId: varchar('manager_id').references(() => employees.id),
+  teamId: varchar('team_id'),
+  locationId: varchar('location_id'),
+  
+  // Performance
+  lastReviewDate: timestamp('last_review_date'),
+  nextReviewDate: timestamp('next_review_date'),
+  performanceRating: decimal('performance_rating', { precision: 3, scale: 2 }),
+  
+  metadata: jsonb('metadata'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+// Job postings and recruitment
+export const jobPostings = pgTable('job_postings', {
+  id: varchar('id').primaryKey().default(sql`gen_random_uuid()`),
+  organizationId: varchar('organization_id').notNull().references(() => organizations.id),
+  title: varchar('title').notNull(),
+  department: varchar('department').notNull(),
+  locationId: varchar('location_id'),
+  description: text('description').notNull(),
+  requirements: text('requirements'),
+  responsibilities: text('responsibilities'),
+  salaryMin: decimal('salary_min', { precision: 10, scale: 2 }),
+  salaryMax: decimal('salary_max', { precision: 10, scale: 2 }),
+  employmentType: varchar('employment_type').notNull(),
+  status: varchar('status').notNull().default('draft'), // draft, open, closed, filled
+  postedDate: timestamp('posted_date'),
+  closingDate: timestamp('closing_date'),
+  postedBy: varchar('posted_by').notNull(),
+  metadata: jsonb('metadata'),
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
+// Job applications
+export const jobApplications = pgTable('job_applications', {
+  id: varchar('id').primaryKey().default(sql`gen_random_uuid()`),
+  jobPostingId: varchar('job_posting_id').notNull().references(() => jobPostings.id),
+  candidateName: varchar('candidate_name').notNull(),
+  candidateEmail: varchar('candidate_email').notNull(),
+  candidatePhone: varchar('candidate_phone'),
+  resumeUrl: varchar('resume_url'),
+  coverLetterUrl: varchar('cover_letter_url'),
+  status: varchar('status').notNull().default('received'), // received, screening, interview, offered, hired, rejected
+  score: integer('score'),
+  notes: text('notes'),
+  appliedAt: timestamp('applied_at').defaultNow(),
+  reviewedBy: varchar('reviewed_by'),
+  reviewedAt: timestamp('reviewed_at'),
+  metadata: jsonb('metadata'),
+});
+
+// Performance reviews
+export const performanceReviews = pgTable('performance_reviews', {
+  id: varchar('id').primaryKey().default(sql`gen_random_uuid()`),
+  employeeId: varchar('employee_id').notNull().references(() => employees.id),
+  reviewerId: varchar('reviewer_id').notNull().references(() => employees.id),
+  reviewPeriod: varchar('review_period').notNull(),
+  reviewType: varchar('review_type').notNull(), // annual, quarterly, probation, promotion
+  overallRating: decimal('overall_rating', { precision: 3, scale: 2 }),
+  categories: jsonb('categories'), // different rating categories
+  strengths: text('strengths'),
+  improvements: text('improvements'),
+  goals: jsonb('goals'),
+  status: varchar('status').notNull().default('draft'), // draft, submitted, acknowledged
+  reviewDate: timestamp('review_date').notNull(),
+  acknowledgedAt: timestamp('acknowledged_at'),
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
+// Timesheets
+export const timesheets = pgTable('timesheets', {
+  id: varchar('id').primaryKey().default(sql`gen_random_uuid()`),
+  employeeId: varchar('employee_id').notNull().references(() => employees.id),
+  weekStartDate: timestamp('week_start_date').notNull(),
+  weekEndDate: timestamp('week_end_date').notNull(),
+  totalHours: decimal('total_hours', { precision: 5, scale: 2 }).notNull(),
+  regularHours: decimal('regular_hours', { precision: 5, scale: 2 }),
+  overtimeHours: decimal('overtime_hours', { precision: 5, scale: 2 }),
+  entries: jsonb('entries'), // daily time entries
+  status: varchar('status').notNull().default('draft'), // draft, submitted, approved, rejected
+  submittedAt: timestamp('submitted_at'),
+  approvedBy: varchar('approved_by'),
+  approvedAt: timestamp('approved_at'),
+  notes: text('notes'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+// Leave requests
+export const leaveRequests = pgTable('leave_requests', {
+  id: varchar('id').primaryKey().default(sql`gen_random_uuid()`),
+  employeeId: varchar('employee_id').notNull().references(() => employees.id),
+  leaveType: varchar('leave_type').notNull(), // vacation, sick, personal, bereavement
+  startDate: timestamp('start_date').notNull(),
+  endDate: timestamp('end_date').notNull(),
+  totalDays: decimal('total_days', { precision: 4, scale: 1 }).notNull(),
+  reason: text('reason'),
+  status: varchar('status').notNull().default('pending'), // pending, approved, rejected, cancelled
+  approvedBy: varchar('approved_by'),
+  approvedAt: timestamp('approved_at'),
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
+// Training & Certifications
+export const trainings = pgTable('trainings', {
+  id: varchar('id').primaryKey().default(sql`gen_random_uuid()`),
+  employeeId: varchar('employee_id').notNull().references(() => employees.id),
+  trainingName: varchar('training_name').notNull(),
+  trainingType: varchar('training_type').notNull(), // certification, course, workshop, seminar
+  provider: varchar('provider'),
+  startDate: timestamp('start_date'),
+  completionDate: timestamp('completion_date'),
+  expiryDate: timestamp('expiry_date'),
+  status: varchar('status').notNull().default('enrolled'), // enrolled, in-progress, completed, expired
+  score: decimal('score', { precision: 5, scale: 2 }),
+  certificateUrl: varchar('certificate_url'),
+  cost: decimal('cost', { precision: 10, scale: 2 }),
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
+// ========== LOCATIONS ==========
+
+// Multiple site/facility management
+export const locations = pgTable('locations', {
+  id: varchar('id').primaryKey().default(sql`gen_random_uuid()`),
+  organizationId: varchar('organization_id').notNull().references(() => organizations.id),
+  locationCode: varchar('location_code').notNull().unique(),
+  name: varchar('name').notNull(),
+  type: varchar('type').notNull(), // headquarters, branch, warehouse, facility
+  
+  // Address
+  address: text('address').notNull(),
+  city: varchar('city').notNull(),
+  state: varchar('state').notNull(),
+  zipCode: varchar('zip_code').notNull(),
+  country: varchar('country').notNull().default('USA'),
+  latitude: decimal('latitude', { precision: 10, scale: 8 }),
+  longitude: decimal('longitude', { precision: 11, scale: 8 }),
+  
+  // Contact
+  phone: varchar('phone'),
+  email: varchar('email'),
+  managerId: varchar('manager_id'),
+  
+  // Operational Details
+  operatingHours: jsonb('operating_hours'),
+  capacity: integer('capacity'),
+  squareFootage: integer('square_footage'),
+  departments: jsonb('departments'),
+  services: jsonb('services'),
+  
+  // Status
+  status: varchar('status').notNull().default('active'), // active, inactive, construction, closed
+  openedDate: timestamp('opened_date'),
+  closedDate: timestamp('closed_date'),
+  
+  metadata: jsonb('metadata'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+// ========== FLEET MANAGEMENT ==========
+
+// Vehicles and equipment
+export const fleet = pgTable('fleet', {
+  id: varchar('id').primaryKey().default(sql`gen_random_uuid()`),
+  organizationId: varchar('organization_id').notNull().references(() => organizations.id),
+  assetNumber: varchar('asset_number').notNull().unique(),
+  type: varchar('type').notNull(), // vehicle, equipment, machinery
+  category: varchar('category').notNull(), // car, truck, bus, excavator, etc
+  make: varchar('make'),
+  model: varchar('model'),
+  year: integer('year'),
+  vin: varchar('vin').unique(),
+  licensePlate: varchar('license_plate').unique(),
+  
+  // Status and Assignment
+  status: varchar('status').notNull().default('available'), // available, assigned, maintenance, retired
+  assignedToEmployeeId: varchar('assigned_to_employee_id'),
+  locationId: varchar('location_id'),
+  departmentId: varchar('department_id'),
+  
+  // Acquisition and Value
+  purchaseDate: timestamp('purchase_date'),
+  purchasePrice: decimal('purchase_price', { precision: 10, scale: 2 }),
+  currentValue: decimal('current_value', { precision: 10, scale: 2 }),
+  depreciationRate: decimal('depreciation_rate', { precision: 5, scale: 2 }),
+  
+  // Operational Data
+  mileage: integer('mileage'),
+  fuelType: varchar('fuel_type'),
+  fuelCapacity: decimal('fuel_capacity', { precision: 6, scale: 2 }),
+  lastServiceDate: timestamp('last_service_date'),
+  nextServiceDue: timestamp('next_service_due'),
+  
+  // Insurance and Registration
+  insuranceProvider: varchar('insurance_provider'),
+  insurancePolicyNumber: varchar('insurance_policy_number'),
+  insuranceExpiry: timestamp('insurance_expiry'),
+  registrationExpiry: timestamp('registration_expiry'),
+  
+  metadata: jsonb('metadata'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+// Fleet maintenance records
+export const fleetMaintenance = pgTable('fleet_maintenance', {
+  id: varchar('id').primaryKey().default(sql`gen_random_uuid()`),
+  fleetId: varchar('fleet_id').notNull().references(() => fleet.id),
+  maintenanceType: varchar('maintenance_type').notNull(), // preventive, repair, inspection
+  description: text('description').notNull(),
+  performedBy: varchar('performed_by'),
+  vendorId: varchar('vendor_id').references(() => vendors.id),
+  cost: decimal('cost', { precision: 10, scale: 2 }),
+  mileageAtService: integer('mileage_at_service'),
+  scheduledDate: timestamp('scheduled_date'),
+  completedDate: timestamp('completed_date'),
+  status: varchar('status').notNull().default('scheduled'), // scheduled, in-progress, completed, cancelled
+  nextServiceDue: timestamp('next_service_due'),
+  parts: jsonb('parts'), // parts replaced/used
+  notes: text('notes'),
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
+// Fuel tracking
+export const fuelLogs = pgTable('fuel_logs', {
+  id: varchar('id').primaryKey().default(sql`gen_random_uuid()`),
+  fleetId: varchar('fleet_id').notNull().references(() => fleet.id),
+  employeeId: varchar('employee_id'),
+  date: timestamp('date').notNull(),
+  mileage: integer('mileage'),
+  gallons: decimal('gallons', { precision: 6, scale: 2 }),
+  pricePerGallon: decimal('price_per_gallon', { precision: 5, scale: 2 }),
+  totalCost: decimal('total_cost', { precision: 10, scale: 2 }),
+  fuelStation: varchar('fuel_station'),
+  paymentMethod: varchar('payment_method'),
+  receiptUrl: varchar('receipt_url'),
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
+// ========== ENHANCED PROCUREMENT ==========
+
+// Purchase requisitions
+export const purchaseRequisitions = pgTable('purchase_requisitions', {
+  id: varchar('id').primaryKey().default(sql`gen_random_uuid()`),
+  organizationId: varchar('organization_id').notNull().references(() => organizations.id),
+  requisitionNumber: varchar('requisition_number').notNull().unique(),
+  requesterId: varchar('requester_id').notNull(),
+  departmentId: varchar('department_id'),
+  locationId: varchar('location_id'),
+  
+  // Items and Details
+  items: jsonb('items').notNull(), // array of items with quantities and specs
+  justification: text('justification'),
+  estimatedCost: decimal('estimated_cost', { precision: 10, scale: 2 }),
+  budgetId: varchar('budget_id').references(() => budgets.id),
+  
+  // Approval Workflow
+  status: varchar('status').notNull().default('draft'), // draft, submitted, approved, rejected, converted
+  priority: varchar('priority').notNull().default('normal'), // low, normal, high, urgent
+  approvalChain: jsonb('approval_chain'),
+  currentApprover: varchar('current_approver'),
+  
+  // Dates
+  neededBy: timestamp('needed_by'),
+  submittedAt: timestamp('submitted_at'),
+  approvedAt: timestamp('approved_at'),
+  
+  metadata: jsonb('metadata'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+// Purchase orders
+export const purchaseOrders = pgTable('purchase_orders', {
+  id: varchar('id').primaryKey().default(sql`gen_random_uuid()`),
+  organizationId: varchar('organization_id').notNull().references(() => organizations.id),
+  poNumber: varchar('po_number').notNull().unique(),
+  requisitionId: varchar('requisition_id').references(() => purchaseRequisitions.id),
+  vendorId: varchar('vendor_id').notNull().references(() => vendors.id),
+  
+  // Order Details
+  items: jsonb('items').notNull(),
+  subtotal: decimal('subtotal', { precision: 10, scale: 2 }).notNull(),
+  tax: decimal('tax', { precision: 10, scale: 2 }),
+  shipping: decimal('shipping', { precision: 10, scale: 2 }),
+  totalAmount: decimal('total_amount', { precision: 10, scale: 2 }).notNull(),
+  
+  // Terms and Conditions
+  paymentTerms: varchar('payment_terms'),
+  deliveryTerms: varchar('delivery_terms'),
+  deliveryAddress: text('delivery_address'),
+  expectedDelivery: timestamp('expected_delivery'),
+  
+  // Status Tracking
+  status: varchar('status').notNull().default('draft'), // draft, sent, acknowledged, partial, fulfilled, cancelled
+  sentAt: timestamp('sent_at'),
+  acknowledgedAt: timestamp('acknowledged_at'),
+  fulfilledAt: timestamp('fulfilled_at'),
+  
+  metadata: jsonb('metadata'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+// RFPs (Request for Proposals)
+export const rfps = pgTable('rfps', {
+  id: varchar('id').primaryKey().default(sql`gen_random_uuid()`),
+  organizationId: varchar('organization_id').notNull().references(() => organizations.id),
+  rfpNumber: varchar('rfp_number').notNull().unique(),
+  title: varchar('title').notNull(),
+  description: text('description'),
+  category: varchar('category').notNull(),
+  estimatedValue: decimal('estimated_value', { precision: 10, scale: 2 }),
+  
+  // Timeline
+  issueDate: timestamp('issue_date').notNull(),
+  questionDeadline: timestamp('question_deadline'),
+  submissionDeadline: timestamp('submission_deadline').notNull(),
+  evaluationStartDate: timestamp('evaluation_start_date'),
+  expectedAwardDate: timestamp('expected_award_date'),
+  
+  // Requirements
+  requirements: jsonb('requirements'),
+  evaluationCriteria: jsonb('evaluation_criteria'),
+  terms: text('terms'),
+  
+  // Status
+  status: varchar('status').notNull().default('draft'), // draft, open, evaluation, awarded, cancelled
+  awardedVendorId: varchar('awarded_vendor_id'),
+  awardedAmount: decimal('awarded_amount', { precision: 10, scale: 2 }),
+  
+  createdBy: varchar('created_by').notNull(),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+// Vendor bids/proposals
+export const vendorBids = pgTable('vendor_bids', {
+  id: varchar('id').primaryKey().default(sql`gen_random_uuid()`),
+  rfpId: varchar('rfp_id').notNull().references(() => rfps.id),
+  vendorId: varchar('vendor_id').notNull().references(() => vendors.id),
+  bidAmount: decimal('bid_amount', { precision: 10, scale: 2 }).notNull(),
+  proposalUrl: varchar('proposal_url'),
+  technicalScore: decimal('technical_score', { precision: 5, scale: 2 }),
+  priceScore: decimal('price_score', { precision: 5, scale: 2 }),
+  totalScore: decimal('total_score', { precision: 5, scale: 2 }),
+  status: varchar('status').notNull().default('submitted'), // submitted, under-review, shortlisted, awarded, rejected
+  notes: text('notes'),
+  submittedAt: timestamp('submitted_at').defaultNow(),
+  evaluatedBy: varchar('evaluated_by'),
+  evaluatedAt: timestamp('evaluated_at'),
+});
+
+// ========== INVENTORY MANAGEMENT ==========
+
+export const inventory = pgTable('inventory', {
+  id: varchar('id').primaryKey().default(sql`gen_random_uuid()`),
+  organizationId: varchar('organization_id').notNull().references(() => organizations.id),
+  itemCode: varchar('item_code').notNull().unique(),
+  name: varchar('name').notNull(),
+  description: text('description'),
+  category: varchar('category').notNull(),
+  unit: varchar('unit').notNull(), // each, box, case, etc
+  
+  // Stock Levels
+  quantityOnHand: integer('quantity_on_hand').notNull().default(0),
+  quantityAllocated: integer('quantity_allocated').default(0),
+  quantityAvailable: integer('quantity_available').default(0),
+  reorderPoint: integer('reorder_point'),
+  reorderQuantity: integer('reorder_quantity'),
+  maxStock: integer('max_stock'),
+  
+  // Location
+  locationId: varchar('location_id'),
+  warehouseZone: varchar('warehouse_zone'),
+  shelfLocation: varchar('shelf_location'),
+  
+  // Financial
+  unitCost: decimal('unit_cost', { precision: 10, scale: 2 }),
+  totalValue: decimal('total_value', { precision: 10, scale: 2 }),
+  
+  // Supplier
+  preferredVendorId: varchar('preferred_vendor_id'),
+  vendorItemCode: varchar('vendor_item_code'),
+  
+  metadata: jsonb('metadata'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+// Inventory transactions
+export const inventoryTransactions = pgTable('inventory_transactions', {
+  id: varchar('id').primaryKey().default(sql`gen_random_uuid()`),
+  inventoryId: varchar('inventory_id').notNull().references(() => inventory.id),
+  transactionType: varchar('transaction_type').notNull(), // receipt, issue, adjustment, transfer
+  quantity: integer('quantity').notNull(),
+  unitCost: decimal('unit_cost', { precision: 10, scale: 2 }),
+  totalCost: decimal('total_cost', { precision: 10, scale: 2 }),
+  referenceType: varchar('reference_type'), // po, requisition, work_order
+  referenceId: varchar('reference_id'),
+  fromLocationId: varchar('from_location_id'),
+  toLocationId: varchar('to_location_id'),
+  notes: text('notes'),
+  performedBy: varchar('performed_by').notNull(),
+  transactionDate: timestamp('transaction_date').notNull(),
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
+// ========== WORK ORDERS ==========
+
+export const workOrders = pgTable('work_orders', {
+  id: varchar('id').primaryKey().default(sql`gen_random_uuid()`),
+  organizationId: varchar('organization_id').notNull().references(() => organizations.id),
+  workOrderNumber: varchar('work_order_number').notNull().unique(),
+  title: varchar('title').notNull(),
+  description: text('description'),
+  category: varchar('category').notNull(), // maintenance, repair, inspection, installation
+  priority: varchar('priority').notNull().default('normal'), // low, normal, high, urgent, emergency
+  
+  // Location and Asset
+  locationId: varchar('location_id'),
+  assetId: varchar('asset_id'),
+  fleetId: varchar('fleet_id'),
+  
+  // Assignment
+  requestedBy: varchar('requested_by').notNull(),
+  assignedToEmployeeId: varchar('assigned_to_employee_id'),
+  assignedToVendorId: varchar('assigned_to_vendor_id'),
+  
+  // Timeline
+  requestedDate: timestamp('requested_date').notNull(),
+  scheduledDate: timestamp('scheduled_date'),
+  startedDate: timestamp('started_date'),
+  completedDate: timestamp('completed_date'),
+  dueDate: timestamp('due_date'),
+  
+  // Status and Cost
+  status: varchar('status').notNull().default('open'), // open, assigned, in-progress, on-hold, completed, cancelled
+  estimatedCost: decimal('estimated_cost', { precision: 10, scale: 2 }),
+  actualCost: decimal('actual_cost', { precision: 10, scale: 2 }),
+  estimatedHours: decimal('estimated_hours', { precision: 5, scale: 2 }),
+  actualHours: decimal('actual_hours', { precision: 5, scale: 2 }),
+  
+  // Details
+  partsUsed: jsonb('parts_used'),
+  completionNotes: text('completion_notes'),
+  
+  metadata: jsonb('metadata'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+// Contract management
+export const contracts = pgTable('contracts', {
+  id: varchar('id').primaryKey().default(sql`gen_random_uuid()`),
+  organizationId: varchar('organization_id').notNull().references(() => organizations.id),
+  contractNumber: varchar('contract_number').notNull().unique(),
+  title: varchar('title').notNull(),
+  type: varchar('type').notNull(), // service, supply, lease, employment
+  vendorId: varchar('vendor_id'),
+  
+  // Value and Terms
+  totalValue: decimal('total_value', { precision: 10, scale: 2 }),
+  paymentTerms: text('payment_terms'),
+  deliverables: jsonb('deliverables'),
+  
+  // Timeline
+  startDate: timestamp('start_date').notNull(),
+  endDate: timestamp('end_date').notNull(),
+  renewalDate: timestamp('renewal_date'),
+  cancellationNotice: integer('cancellation_notice_days'),
+  
+  // Status
+  status: varchar('status').notNull().default('draft'), // draft, active, expired, renewed, terminated
+  signedDate: timestamp('signed_date'),
+  signedBy: varchar('signed_by'),
+  
+  // Documents
+  documentUrl: varchar('document_url'),
+  amendments: jsonb('amendments'),
+  
+  // Management
+  managedBy: varchar('managed_by').notNull(),
+  department: varchar('department'),
+  
+  metadata: jsonb('metadata'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+// Emergency response system
+export const emergencyIncidents = pgTable('emergency_incidents', {
+  id: varchar('id').primaryKey().default(sql`gen_random_uuid()`),
+  organizationId: varchar('organization_id').notNull().references(() => organizations.id),
+  incidentNumber: varchar('incident_number').notNull().unique(),
+  type: varchar('type').notNull(), // fire, flood, accident, security, medical, natural_disaster
+  severity: varchar('severity').notNull(), // low, medium, high, critical
+  
+  // Location and Time
+  locationId: varchar('location_id'),
+  specificLocation: text('specific_location'),
+  reportedAt: timestamp('reported_at').notNull(),
+  respondedAt: timestamp('responded_at'),
+  resolvedAt: timestamp('resolved_at'),
+  
+  // People Involved
+  reportedBy: varchar('reported_by').notNull(),
+  incidentCommander: varchar('incident_commander'),
+  responders: jsonb('responders'), // list of responders
+  affectedPersonnel: jsonb('affected_personnel'),
+  
+  // Details
+  description: text('description').notNull(),
+  actions: jsonb('actions'), // timeline of actions taken
+  resources: jsonb('resources'), // resources deployed
+  externalAgencies: jsonb('external_agencies'), // police, fire, EMS contacted
+  
+  // Status and Impact
+  status: varchar('status').notNull().default('active'), // active, contained, resolved, closed
+  injuries: integer('injuries').default(0),
+  fatalities: integer('fatalities').default(0),
+  propertyDamage: decimal('property_damage', { precision: 10, scale: 2 }),
+  
+  // Follow-up
+  investigationRequired: boolean('investigation_required').default(false),
+  reportUrl: varchar('report_url'),
+  lessonsLearned: text('lessons_learned'),
+  
+  metadata: jsonb('metadata'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
 // Enhanced Transactions for Multi-Provider Support
 export const enhancedTransactions = pgTable("enhanced_transactions", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -847,3 +1417,39 @@ export type CitizenService = typeof citizenServices.$inferSelect;
 export type InsertCitizenService = z.infer<typeof insertCitizenServiceSchema>;
 export type EnhancedTransaction = typeof enhancedTransactions.$inferSelect;
 export type InsertEnhancedTransaction = z.infer<typeof insertEnhancedTransactionSchema>;
+
+// HR & Employee Types
+export type Employee = typeof employees.$inferSelect;
+export type JobPosting = typeof jobPostings.$inferSelect;
+export type JobApplication = typeof jobApplications.$inferSelect;
+export type PerformanceReview = typeof performanceReviews.$inferSelect;
+export type Timesheet = typeof timesheets.$inferSelect;
+export type LeaveRequest = typeof leaveRequests.$inferSelect;
+export type Training = typeof trainings.$inferSelect;
+
+// Location Types
+export type Location = typeof locations.$inferSelect;
+
+// Fleet Management Types
+export type Fleet = typeof fleet.$inferSelect;
+export type FleetMaintenance = typeof fleetMaintenance.$inferSelect;
+export type FuelLog = typeof fuelLogs.$inferSelect;
+
+// Procurement Types
+export type PurchaseRequisition = typeof purchaseRequisitions.$inferSelect;
+export type PurchaseOrder = typeof purchaseOrders.$inferSelect;
+export type RFP = typeof rfps.$inferSelect;
+export type VendorBid = typeof vendorBids.$inferSelect;
+
+// Inventory Types
+export type Inventory = typeof inventory.$inferSelect;
+export type InventoryTransaction = typeof inventoryTransactions.$inferSelect;
+
+// Work Order Types
+export type WorkOrder = typeof workOrders.$inferSelect;
+
+// Contract Types
+export type Contract = typeof contracts.$inferSelect;
+
+// Emergency Types
+export type EmergencyIncident = typeof emergencyIncidents.$inferSelect;
