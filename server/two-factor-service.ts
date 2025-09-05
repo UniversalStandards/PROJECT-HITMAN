@@ -56,7 +56,7 @@ class TwoFactorService {
       const [existing] = await db
         .select()
         .from(twoFactorAuth)
-        .where(eq(twoFactorAuth.userId, userId))
+        .where(eq(twoFactorAuth.userId, request.userId))
         .limit(1);
 
       if (existing) {
@@ -73,7 +73,7 @@ class TwoFactorService {
             phoneNumber: request.phoneNumber || existing.phoneNumber,
             updatedAt: new Date()
           })
-          .where(eq(twoFactorAuth.userId, userId))
+          .where(eq(twoFactorAuth.userId, request.userId))
           .returning();
 
         return updated[0];
@@ -137,7 +137,7 @@ class TwoFactorService {
       const [auth] = await db
         .select()
         .from(twoFactorAuth)
-        .where(eq(twoFactorAuth.userId, userId))
+        .where(eq(twoFactorAuth.userId, request.userId))
         .limit(1);
 
       if (!auth) {
@@ -195,7 +195,7 @@ class TwoFactorService {
       const [auth] = await db
         .select()
         .from(twoFactorAuth)
-        .where(eq(twoFactorAuth.userId, userId))
+        .where(eq(twoFactorAuth.userId, request.userId))
         .limit(1);
 
       if (!auth || !auth.isEnabled) {
@@ -213,7 +213,7 @@ class TwoFactorService {
             backupCodes: updatedCodes,
             lastUsedAt: new Date()
           })
-          .where(eq(twoFactorAuth.userId, userId));
+          .where(eq(twoFactorAuth.userId, request.userId));
 
         return true;
       }
@@ -227,7 +227,7 @@ class TwoFactorService {
           await db
             .update(twoFactorAuth)
             .set({ lastUsedAt: new Date() })
-            .where(eq(twoFactorAuth.userId, userId));
+            .where(eq(twoFactorAuth.userId, request.userId));
         }
         
         return isValid;
@@ -252,7 +252,7 @@ class TwoFactorService {
       }
 
       // Check attempts
-      if (session.attempts >= session.maxAttempts) {
+      if ((session.attempts || 0) >= (session.maxAttempts || 3)) {
         throw new Error('Maximum verification attempts exceeded');
       }
 
@@ -279,7 +279,7 @@ class TwoFactorService {
         // Increment attempts
         await db
           .update(twoFactorSessions)
-          .set({ attempts: session.attempts + 1 })
+          .set({ attempts: (session.attempts || 0) + 1 })
           .where(eq(twoFactorSessions.id, session.id));
       }
 
@@ -406,7 +406,7 @@ class TwoFactorService {
         .where(
           and(
             eq(twoFactorSessions.isVerified, false),
-            gte(new Date(), twoFactorSessions.expiresAt)
+            gte(twoFactorSessions.expiresAt, new Date())
           )
         );
     } catch (error) {

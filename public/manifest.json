@@ -1,7 +1,7 @@
 {
   "name": "Government Operations and Financial Accounting Platform",
   "short_name": "GOFAP",
-  "description": "Comprehensive financial management platform for government entities",
+  "description": "Comprehensive financial management and operations platform for government entities, facilitating a wide range of functionalities including budgeting, reporting, and expenditure tracking.",
   "theme_color": "#1e40af",
   "background_color": "#ffffff",
   "display": "standalone",
@@ -20,24 +20,45 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-1024.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any"
     }
   ],
-  "categories": ["government", "finance", "business"],
+  "categories": ["government", "finance", "business", "productivity", "tools"],
   "shortcuts": [
     {
       "name": "Pay Taxes",
       "url": "/citizen",
-      "description": "Make tax and utility payments"
+      "description": "Make tax and utility payments efficiently and securely."
     },
     {
       "name": "Submit Invoice",
       "url": "/vendor-portal",
-      "description": "Submit vendor invoices"
+      "description": "Submit vendor invoices with ease and track payment status."
     },
     {
       "name": "Dashboard",
       "url": "/dashboard",
-      "description": "View financial dashboard"
+      "description": "View financial dashboard for insights and analytics."
+    },
+    {
+      "name": "Budgeting Tools",
+      "url": "/budgeting-tools",
+      "description": "Access budgeting tools and resources."
+    }
+  ],
+  "related_applications": [
+    {
+      "platform": "play",
+      "url": "https://play.google.com/store/apps/details?id=com.gofap"
+    },
+    {
+      "platform": "itunes",
+      "url": "https://itunes.apple.com/app/gofap/id123456789"
     }
   ]
 }
