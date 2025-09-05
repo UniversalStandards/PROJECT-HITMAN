@@ -1,45 +1,30 @@
-run = "bash setup.sh && python3 -m venv venv && source venv/bin/activate && pip install -r requirements.txt && python3 modern_treasury/gui/gui_main.py"
-modules = ["dotnet-10.0", "aws-sdk"]
+run = "modern_treasury/gui/gui_main.py"
 
 [nix]
-channel = "stable-23_05"
+channel = "stable-22_11"
 
-language = "python3.10"
+language = "python3"
+run = "bash setup.sh && python3 modern_treasury/gui/gui_main.py"
 
-env = '''
-  # Environment variables
-  export STRIPE_API_KEY="your_stripe_api_key"
-  export MODERN_TREASURY_API_KEY="MT_PUB_KEY"
-  export DEBUG="true"
-  export LOG_LEVEL="info"
-'''
-
+[nix]
+channel = "stable-22_11"
 build = '''
-  # Build steps
+  # Add any build steps here if you have any
   echo "Building the application..."
-  python3 -m venv venv
-  source venv/bin/activate
-  pip install -r requirements.txt
-  python3 -m pytest tests/
 '''
 
 deps = '''
-  # Application dependencies
+  # Add any dependencies here that your application requires
   flask
   requests
   pytest
-  pytest-cov
-  pandas
-  numpy
-  boto3
-  sqlalchemy
-'''
-# Define a startup script that runs before your main application starts.
-startup = '''
-  echo "Starting up the application..."
-  source venv/bin/activate
-  python3 modern_treasury/gui/gui_main.py
 '''
 
-[agent]
-expertMode = true
+env = '''
+  # Set environment variables here if your application requires them.
+  STRIPE_API_KEY="your_stripe_api_key"
+  MODERN_TREASURY_API_KEY="MT_PUB_KEY"
+'''
+
+# Optionally define a startup script that runs before your main application starts.
+# startup = "source venv/bin/activate && pip install -r requirements.txt"
