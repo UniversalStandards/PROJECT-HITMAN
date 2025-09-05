@@ -18,6 +18,13 @@ import VendorPortal from "@/pages/vendor-portal";
 import EmployeeDashboard from "@/pages/employee-dashboard";
 import AdminDashboard from "@/pages/admin-dashboard";
 import PublicServices from "@/pages/public-services";
+import About from "@/pages/about";
+import Contact from "@/pages/contact";
+import ServicesDirectory from "@/pages/services-directory";
+import FAQ from "@/pages/faq";
+import News from "@/pages/news";
+import Careers from "@/pages/careers";
+import RoleSelector from "@/pages/role-selector";
 
 function Router() {
   const { isAuthenticated, isLoading, user } = useAuth();
@@ -38,10 +45,16 @@ function Router() {
       {/* Public/Citizen Routes */}
       {isCitizen ? (
         <>
-          <Route path="/" component={PublicServices} />
+          <Route path="/" component={RoleSelector} />
           <Route path="/services" component={PublicServices} />
           <Route path="/citizen" component={CitizenPortal} />
           <Route path="/vendor-registration" component={VendorPortal} />
+          <Route path="/services-directory" component={ServicesDirectory} />
+          <Route path="/about" component={About} />
+          <Route path="/contact" component={Contact} />
+          <Route path="/faq" component={FAQ} />
+          <Route path="/news" component={News} />
+          <Route path="/careers" component={Careers} />
         </>
       ) : null}
       
@@ -77,15 +90,28 @@ function Router() {
           <Route path="/employee" component={EmployeeDashboard} />
           <Route path="/citizen" component={CitizenPortal} />
           <Route path="/vendor-portal" component={VendorPortal} />
+          <Route path="/services-directory" component={ServicesDirectory} />
+          <Route path="/about" component={About} />
+          <Route path="/contact" component={Contact} />
+          <Route path="/faq" component={FAQ} />
+          <Route path="/news" component={News} />
+          <Route path="/careers" component={Careers} />
         </>
       ) : null}
       
       {/* Default Landing for unauthenticated */}
       {!isAuthenticated && (
         <>
-          <Route path="/" component={PublicServices} />
+          <Route path="/" component={RoleSelector} />
           <Route path="/services" component={PublicServices} />
           <Route path="/landing" component={Landing} />
+          <Route path="/services-directory" component={ServicesDirectory} />
+          <Route path="/about" component={About} />
+          <Route path="/contact" component={Contact} />
+          <Route path="/faq" component={FAQ} />
+          <Route path="/news" component={News} />
+          <Route path="/careers" component={Careers} />
+          <Route path="/role-select" component={RoleSelector} />
         </>
       )}
       
