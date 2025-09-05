@@ -372,19 +372,26 @@ export const citizenServices = pgTable("citizen_services", {
 export const employees = pgTable('employees', {
   id: varchar('id').primaryKey().default(sql`gen_random_uuid()`),
   organizationId: varchar('organization_id').notNull().references(() => organizations.id),
-  userId: varchar('user_id').references(() => users.id),
+  userId: varchar('user_id').references(() => users.id), // Linked after verification
   employeeId: varchar('employee_id').notNull().unique(),
   department: varchar('department').notNull(),
   position: varchar('position').notNull(),
   level: varchar('level'), // junior, mid, senior, lead, manager, director
   
-  // Personal Information
+  // Personal Information (for verification)
   firstName: varchar('first_name').notNull(),
   lastName: varchar('last_name').notNull(),
+  dateOfBirth: timestamp('date_of_birth').notNull(), // For verification
   email: varchar('email').notNull().unique(),
   phone: varchar('phone'),
   emergencyContact: jsonb('emergency_contact'),
   address: text('address'),
+  
+  // Verification Status
+  isVerified: boolean('is_verified').default(false),
+  verificationAttempts: integer('verification_attempts').default(0),
+  lastVerificationAttempt: timestamp('last_verification_attempt'),
+  verifiedAt: timestamp('verified_at'),
   
   // Employment Details
   hireDate: timestamp('hire_date').notNull(),

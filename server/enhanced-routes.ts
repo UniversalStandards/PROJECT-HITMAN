@@ -5,6 +5,7 @@ import { isAuthenticated } from "./replitAuth";
 import { enhancedStorage } from "./enhanced-storage";
 import { serviceRegistry } from "./services/service-registry";
 import bulkOperationsRouter from "./routes/bulk-operations";
+import { employeeVerificationService } from "./services/employee-verification";
 import { z } from "zod";
 import {
   insertPaymentProviderSchema,
@@ -171,26 +172,72 @@ export function registerEnhancedRoutes(app: Express) {
 
   // ========== EMPLOYEE ROUTES ==========
   
-  // Employee dashboard data
+  // Check if user is verified employee
+  app.get("/api/employee/verification-status", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const employee = await employeeVerificationService.getEmployeeByUserId(userId);
+      
+      res.json({
+        isVerified: employee?.isVerified || false,
+        employee: employee || null,
+        requiresVerification: !employee || !employee.isVerified
+      });
+    } catch (error) {
+      console.error("Verification status error:", error);
+      res.status(500).json({ message: "Failed to check verification status" });
+    }
+  });
+  
+  // Verify employee identity
+  app.post("/api/employee/verify", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { employeeId, lastName, dateOfBirth } = req.body;
+      
+      if (!employeeId || !lastName || !dateOfBirth) {
+        return res.status(400).json({ message: "Missing required verification fields" });
+      }
+      
+      const result = await employeeVerificationService.verifyEmployee(
+        userId, 
+        employeeId, 
+        lastName, 
+        dateOfBirth
+      );
+      
+      if (result.success) {
+        res.json(result);
+      } else {
+        res.status(400).json(result);
+      }
+    } catch (error) {
+      console.error("Employee verification error:", error);
+      res.status(500).json({ message: "Failed to verify employee" });
+    }
+  });
+  
+  // Employee dashboard data (requires verification)
   app.get("/api/employee/dashboard", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      const user = await enhancedStorage.getUser(userId);
+      const employee = await employeeVerificationService.getVerifiedEmployee(userId);
       
-      // Return empty dashboard data if user not associated with organization
-      if (!user?.organizationId) {
+      // Require verification
+      if (!employee) {
         return res.json({
           cards: [],
           expenses: [],
           managedGrants: [],
           organization: null,
-          message: "Welcome! You're not yet associated with an organization. Contact your administrator to get set up."
+          requiresVerification: true,
+          message: "Please verify your employee information to access the dashboard."
         });
       }
       
       // Get employee-specific data
       const cards = await enhancedStorage.getCardsByHolder(userId);
-      const expenses = await enhancedStorage.getExpenses(user.organizationId);
+      const expenses = await enhancedStorage.getExpenses(employee.organizationId);
       const userExpenses = expenses.filter(e => e.submittedBy === userId);
       const grants = await enhancedStorage.getGrantsByManager(userId);
       
@@ -198,7 +245,9 @@ export function registerEnhancedRoutes(app: Express) {
         cards,
         expenses: userExpenses,
         managedGrants: grants,
-        organization: await enhancedStorage.getOrganization(user.organizationId)
+        organization: await enhancedStorage.getOrganization(employee.organizationId),
+        employee,
+        requiresVerification: false
       });
     } catch (error) {
       console.error("Employee dashboard error:", error);
@@ -254,6 +303,64 @@ export function registerEnhancedRoutes(app: Express) {
   });
 
   // ========== ADMINISTRATOR ROUTES ==========
+  
+  // Upload employees CSV
+  app.post("/api/admin/employees/upload", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await enhancedStorage.getUser(userId);
+      
+      // Check admin role
+      if (user?.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      if (!user?.organizationId) {
+        return res.status(400).json({ message: "Admin must be associated with an organization" });
+      }
+      
+      const { csvData } = req.body;
+      if (!csvData) {
+        return res.status(400).json({ message: "CSV data is required" });
+      }
+      
+      const result = await employeeVerificationService.uploadEmployees(
+        csvData,
+        user.organizationId
+      );
+      
+      res.json({
+        message: `Successfully uploaded ${result.success} employees`,
+        success: result.success,
+        errors: result.errors
+      });
+    } catch (error) {
+      console.error("Employee upload error:", error);
+      res.status(500).json({ message: error.message || "Failed to upload employees" });
+    }
+  });
+  
+  // Get all employees for admin
+  app.get("/api/admin/employees", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await enhancedStorage.getUser(userId);
+      
+      if (user?.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      if (!user?.organizationId) {
+        return res.status(400).json({ message: "Admin must be associated with an organization" });
+      }
+      
+      const employees = await enhancedStorage.getEmployees(user.organizationId);
+      res.json(employees);
+    } catch (error) {
+      console.error("Get employees error:", error);
+      res.status(500).json({ message: "Failed to fetch employees" });
+    }
+  });
   
   // Get comprehensive analytics
   app.get("/api/admin/analytics", isAuthenticated, async (req: any, res) => {

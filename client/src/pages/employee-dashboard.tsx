@@ -12,15 +12,22 @@ import { useToast } from '@/hooks/use-toast';
 import { CreditCard, Receipt, DollarSign, Calendar, TrendingUp, Briefcase, UserCheck, Clock, ChevronRight, FileText } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/useAuth';
+import EmployeeVerificationForm from '@/components/employee-verification-form';
 
 export default function EmployeeDashboard() {
   const { toast } = useToast();
   const { user } = useAuth();
   const [selectedCard, setSelectedCard] = useState<any>(null);
 
+  // Check verification status
+  const { data: verificationStatus } = useQuery({
+    queryKey: ['/api/employee/verification-status'],
+  });
+
   // Fetch employee dashboard data
   const { data: dashboardData, isLoading } = useQuery({
     queryKey: ['/api/employee/dashboard'],
+    enabled: verificationStatus?.isVerified || false, // Only fetch if verified
   });
 
   if (isLoading || !user) {
@@ -31,13 +38,18 @@ export default function EmployeeDashboard() {
     );
   }
 
+  // Show verification form if not verified
+  if (verificationStatus?.requiresVerification || dashboardData?.requiresVerification) {
+    return <EmployeeVerificationForm />;
+  }
+
   const cards = dashboardData?.cards || [];
   const expenses = dashboardData?.expenses || [];
   const grants = dashboardData?.managedGrants || [];
   const message = dashboardData?.message;
 
-  // Show welcome message if not associated with organization
-  if (message) {
+  // Show welcome message if not associated with organization (deprecated - now using verification)
+  if (message && !dashboardData?.requiresVerification) {
     return (
       <div className="container mx-auto py-8 px-4" data-testid="employee-dashboard">
         <div className="max-w-2xl mx-auto">

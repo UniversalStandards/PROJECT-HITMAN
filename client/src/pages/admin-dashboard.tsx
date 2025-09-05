@@ -19,6 +19,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import Sidebar from '@/components/layout/sidebar';
 import Header from '@/components/layout/header';
+import AdminEmployeeUpload from '@/components/admin-employee-upload';
 
 // Integration categories and providers
 const integrationCategories = {
@@ -51,7 +52,7 @@ const integrationCategories = {
 
 export default function AdminDashboard() {
   const { toast } = useToast();
-  const [selectedCategory, setSelectedCategory] = useState('payment');
+  const [selectedCategory, setSelectedCategory] = useState('employees');
   const [configureDialog, setConfigureDialog] = useState(false);
   const [selectedProvider, setSelectedProvider] = useState<any>(null);
   const [apiKeys, setApiKeys] = useState<Record<string, string>>({});
@@ -201,9 +202,13 @@ export default function AdminDashboard() {
             </div>
           )}
 
-          {/* Integration Management Tabs */}
+          {/* Admin Management Tabs */}
           <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-5 max-w-5xl">
+            <TabsList className="grid w-full grid-cols-6 max-w-6xl">
+              <TabsTrigger value="employees" data-testid="tab-employees">
+                <Users className="mr-2 h-4 w-4" />
+                Employee Management
+              </TabsTrigger>
               {Object.entries(integrationCategories).map(([key, category]) => {
                 const Icon = category.icon;
                 return (
@@ -214,6 +219,11 @@ export default function AdminDashboard() {
                 );
               })}
             </TabsList>
+
+            {/* Employee Management Tab Content */}
+            <TabsContent value="employees" className="space-y-4">
+              <AdminEmployeeUpload />
+            </TabsContent>
 
             {Object.entries(integrationCategories).map(([key, category]) => (
               <TabsContent key={key} value={key} className="space-y-4">
