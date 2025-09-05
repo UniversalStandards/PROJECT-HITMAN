@@ -34,6 +34,37 @@ export default function EmployeeDashboard() {
   const cards = dashboardData?.cards || [];
   const expenses = dashboardData?.expenses || [];
   const grants = dashboardData?.managedGrants || [];
+  const message = dashboardData?.message;
+
+  // Show welcome message if not associated with organization
+  if (message) {
+    return (
+      <div className="container mx-auto py-8 px-4" data-testid="employee-dashboard">
+        <div className="max-w-2xl mx-auto">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-2xl">Welcome to GOFAP</CardTitle>
+              <CardDescription>Government Operations and Financial Accounting Platform</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <p className="text-muted-foreground">{message}</p>
+                <div className="p-4 bg-muted rounded-lg">
+                  <h3 className="font-semibold mb-2">Getting Started</h3>
+                  <ul className="space-y-2 text-sm text-muted-foreground">
+                    <li>• Your administrator needs to associate your account with an organization</li>
+                    <li>• Once set up, you'll have access to expense management and digital cards</li>
+                    <li>• You'll be able to submit timesheets and manage work orders</li>
+                    <li>• Track your training and certifications</li>
+                  </ul>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto py-8 px-4" data-testid="employee-dashboard">

@@ -177,8 +177,15 @@ export function registerEnhancedRoutes(app: Express) {
       const userId = req.user.claims.sub;
       const user = await enhancedStorage.getUser(userId);
       
+      // Return empty dashboard data if user not associated with organization
       if (!user?.organizationId) {
-        return res.status(400).json({ message: "Employee not associated with organization" });
+        return res.json({
+          cards: [],
+          expenses: [],
+          managedGrants: [],
+          organization: null,
+          message: "Welcome! You're not yet associated with an organization. Contact your administrator to get set up."
+        });
       }
       
       // Get employee-specific data
