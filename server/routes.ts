@@ -11,10 +11,14 @@ import {
   insertOrganizationSchema 
 } from "@shared/schema";
 import { z } from "zod";
+import { registerEnhancedRoutes } from "./enhanced-routes";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
+  
+  // Register enhanced routes for all new features
+  registerEnhancedRoutes(app);
 
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
