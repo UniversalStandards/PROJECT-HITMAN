@@ -1,0 +1,43 @@
+{
+  "name": "Government Operations and Financial Accounting Platform",
+  "short_name": "GOFAP",
+  "description": "Comprehensive financial management platform for government entities",
+  "theme_color": "#1e40af",
+  "background_color": "#ffffff",
+  "display": "standalone",
+  "scope": "/",
+  "start_url": "/",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["government", "finance", "business"],
+  "shortcuts": [
+    {
+      "name": "Pay Taxes",
+      "url": "/citizen",
+      "description": "Make tax and utility payments"
+    },
+    {
+      "name": "Submit Invoice",
+      "url": "/vendor-portal",
+      "description": "Submit vendor invoices"
+    },
+    {
+      "name": "Dashboard",
+      "url": "/dashboard",
+      "description": "View financial dashboard"
+    }
+  ]
+}

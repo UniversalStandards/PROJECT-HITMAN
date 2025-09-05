@@ -1,6 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Bell } from "lucide-react";
+import { Plus } from "lucide-react";
+import NotificationCenter from "@/components/notification-center";
+import ThemeToggle from "@/components/theme-toggle";
 
 export default function Header() {
   return (
@@ -22,20 +24,8 @@ export default function Header() {
           New Payment
         </Button>
         
-        <Button
-          variant="ghost"
-          size="sm"
-          className="relative text-muted-foreground hover:text-foreground"
-          data-testid="button-notifications"
-        >
-          <Bell className="h-5 w-5" />
-          <Badge 
-            variant="destructive" 
-            className="absolute -top-1 -right-1 w-5 h-5 flex items-center justify-center text-xs p-0"
-          >
-            3
-          </Badge>
-        </Button>
+        <ThemeToggle />
+        <NotificationCenter />
       </div>
     </header>
   );
