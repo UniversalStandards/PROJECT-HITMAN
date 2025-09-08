@@ -54,7 +54,8 @@ export const paymentStatusEnum = pgEnum("payment_status", ["pending", "approved"
 export const paymentTypeEnum = pgEnum("payment_type", ["vendor", "payroll", "expense", "tax", "transfer", "ach", "wire", "instant", "check", "cryptocurrency", "international"]);
 export const expenseStatusEnum = pgEnum("expense_status", ["draft", "submitted", "approved", "rejected", "reimbursed"]);
 export const vendorStatusEnum = pgEnum("vendor_status", ["active", "inactive", "suspended", "pending_approval"]);
-export const walletTypeEnum = pgEnum("wallet_type", ["checking", "savings", "payroll", "expense", "tax_collection", "treasury", "investment", "escrow", "grant", "utility"]);
+export const walletTypeEnum = pgEnum("wallet_type", ["checking", "savings", "payroll", "expense", "tax_collection", "treasury", "investment", "escrow", "grant", "utility", "digital"]);
+ export const transactionTypeEnum = pgEnum("transaction_type", ["debit", "credit", "transfer", "fee", "interest", "dividend", "withdrawal", "deposit", "purchase", "sale", "exchange", "reversal", "adjustment"]); // Add more as needed         
 
 export const budgets = pgTable("budgets", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
