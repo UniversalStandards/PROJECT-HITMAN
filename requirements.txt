@@ -5,7 +5,7 @@ Flask-Migrate>=4.0.5
 
 # API integrations
 stripe>=6.0.0
-requests>=2.31.0
+requests>=2.32.4
 
 # Modern Treasury integration (example - adjust based on actual SDK)
 # modern-treasury>=1.0.0
