@@ -1,2 +1,2 @@
 from .credit_card import CreditCardIssuer
-CreditCardIssuer()
+issuer = CreditCardIssuer()
