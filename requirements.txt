@@ -22,4 +22,4 @@ flake8>=6.0.0
 mypy>=1.5.1
 
 # Production server
-gunicorn>=21.2.0
+gunicorn>=22.0.0
