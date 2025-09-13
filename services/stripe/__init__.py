@@ -1,2 +1,2 @@
 from .stripe import StripeService
-StripeService()
+stripe_service = StripeService()
