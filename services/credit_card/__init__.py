@@ -1,2 +1,2 @@
 from .credit_card import CreditCardService
-CreditCardService()
+credit_card_service = CreditCardService()
