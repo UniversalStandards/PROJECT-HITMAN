@@ -33,7 +33,7 @@ for issuer_folder in issuer_folders:
 with open("issuers/credit_card/__init__.py", "w") as f:
     f.write("from .credit_card import CreditCardIssuer\nCreditCardIssuer()")
 with open("issuers/credit_card/credit_card.py", "w") as f:
-    f.write("from .issuer import Issuer\nclass CreditCardIssuer(Issuer):\n    pass") m
+    f.write("from .issuer import Issuer\nclass CreditCardIssuer(Issuer):\n    pass")
 with open("issuers/paypal/__init__.py", "w") as f:
     f.write("from .paypal import PaypalIssuer\nPaypalIssuer()")
 with open("issuers/paypal/paypal.py", "w") as f:
