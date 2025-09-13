@@ -2,21 +2,21 @@ import os
 from pathlib import Path
 
 # Root folder files
-Path("LICENSE").touch()  
+Path("LICENSE").touch()
 Path("Procfile").touch()
 with open("README.md", "w") as f:
     f.write("# Payment Processor Project")
 
-with open("runtime.txt", "w") as f: 
+with open("runtime.txt", "w") as f:
     f.write("python-3.8.1")
 
-# Main folders    
+# Main folders
 folders = ["configs", "issuers", "models", "services", "tests"]
 for folder in folders:
     os.makedirs(folder)
-    Path(f"{folder}/__init__.py").touch() 
+    Path(f"{folder}/__init__.py").touch()
 
-# Sample files    
+# Sample files
 with open("main.py", "w") as f:
     f.write("print('Payment processor app')")
 
@@ -33,7 +33,7 @@ for issuer_folder in issuer_folders:
 with open("issuers/credit_card/__init__.py", "w") as f:
     f.write("from .credit_card import CreditCardIssuer\nCreditCardIssuer()")
 with open("issuers/credit_card/credit_card.py", "w") as f:
-    f.write("from .issuer import Issuer\nclass CreditCardIssuer(Issuer):\n    pass") m
+    f.write("from .issuer import Issuer\nclass CreditCardIssuer(Issuer):\n    pass")
 with open("issuers/paypal/__init__.py", "w") as f:
     f.write("from .paypal import PaypalIssuer\nPaypalIssuer()")
 with open("issuers/paypal/paypal.py", "w") as f:
@@ -51,7 +51,7 @@ for service_folder in service_folders:
 with open("services/credit_card/__init__.py", "w") as f:
     f.write("from .credit_card import CreditCardService\nCreditCardService()")
 with open("services/credit_card/credit_card.py", "w") as f:
-    f.write("from .service import Service\nclass CreditCardService(Service):\n    pass") 
+    f.write("from .service import Service\nclass CreditCardService(Service):\n    pass")
 with open("services/paypal/__init__.py", "w") as f:
     f.write("from .paypal import PaypalService\nPaypalService()")
 with open("services/paypal/paypal.py", "w") as f:
@@ -59,11 +59,11 @@ with open("services/paypal/paypal.py", "w") as f:
 with open("services/stripe/__init__.py", "w") as f:
     f.write("from .stripe import StripeService\nStripeService()")
 with open("services/stripe/stripe.py", "w") as f:
-    f.write("from .service import Service\nclass StripeService(Service):\n    pass" )
+    f.write("from .service import Service\nclass StripeService(Service):\n    pass")
 
 
 with open("configs/settings.py", "w") as f:
-    f.write("DEBUG=True")  
+    f.write("DEBUG=True")
 
 with open("tests/test_transactions.py", "w") as f:
     f.write("import unittest \n\nclass TestTransactions(unittest.TestCase):\n   pass")
