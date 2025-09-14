@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Import Dashboard - GOFAP</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/data_import.css') }}">
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .header { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .card { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .status-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        .status-card { background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #007cba; }
+        .status-healthy { border-left-color: #28a745; }
+        .status-error { border-left-color: #dc3545; }
+        .status-warning { border-left-color: #ffc107; }
+        .btn { padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; text-decoration: none; display: inline-block; }
+        .btn-primary { background: #007cba; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-warning { background: #ffc107; color: black; }
+        .btn:hover { opacity: 0.9; }
+        .alert { padding: 15px; border-radius: 4px; margin-bottom: 20px; }
+        .alert-error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .alert-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .nav { margin-bottom: 20px; }
+        .nav a { margin-right: 15px; padding: 10px 15px; background: white; text-decoration: none; color: #007cba; border-radius: 4px; }
+        .nav a:hover { background: #007cba; color: white; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background-color: #f8f9fa; }
+        .status-indicator { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 8px; }
+        .status-running { background-color: #28a745; }
+        .status-stopped { background-color: #dc3545; }
+        .status-unknown { background-color: #6c757d; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔄 Data Import Dashboard</h1>
+            <p>Manage data synchronization between GOFAP and external services</p>
+        </div>
+
+        <div class="nav">
+            <a href="{{ url_for('data_import.dashboard') }}">Dashboard</a>
+            <a href="{{ url_for('data_import.view_data') }}">View Data</a>
+            <a href="{{ url_for('data_import.config') }}">Configuration</a>
+        </div>
+
+        {% if error %}
+        <div class="alert alert-error">
+            <strong>Error:</strong> {{ error }}
+        </div>
+        {% endif %}
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="alert alert-{{ 'success' if category == 'success' else 'error' }}">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% if status %}
+        <!-- Scheduler Status -->
+        <div class="card">
+            <h2>📅 Scheduler Status</h2>
+            <div class="status-grid">
+                <div class="status-card {{ 'status-healthy' if status.scheduler_running else 'status-error' }}">
+                    <h3>
+                        <span class="status-indicator {{ 'status-running' if status.scheduler_running else 'status-stopped' }}"></span>
+                        Scheduler
+                    </h3>
+                    <p>Status: {{ 'Running' if status.scheduler_running else 'Stopped' }}</p>
+                    <div style="margin-top: 10px;">
+                        {% if status.scheduler_running %}
+                        <form method="POST" action="{{ url_for('data_import.stop_scheduler') }}" style="display: inline;">
+                            <button type="submit" class="btn btn-danger">Stop Scheduler</button>
+                        </form>
+                        {% else %}
+                        <form method="POST" action="{{ url_for('data_import.start_scheduler') }}" style="display: inline;">
+                            <button type="submit" class="btn btn-success">Start Scheduler</button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Service Status -->
+        <div class="card">
+            <h2>🔗 Service Status</h2>
+            {% if status.sync_engine_status and status.sync_engine_status.services %}
+            <div class="status-grid">
+                {% for service in status.sync_engine_status.services %}
+                <div class="status-card {{ 'status-healthy' if service.is_healthy else 'status-error' }}">
+                    <h3>{{ service.service|title }}</h3>
+                    <p><strong>Last Sync:</strong> {{ service.last_sync_at or 'Never' }}</p>
+                    <p><strong>Items Synced:</strong> {{ service.total_items_synced }}</p>
+                    <p><strong>Success Rate:</strong> {{ "%.1f"|format(service.success_rate) }}%</p>
+                    {% if service.last_error_message %}
+                    <p><strong>Last Error:</strong> {{ service.last_error_message[:100] }}...</p>
+                    {% endif %}
+                    <div style="margin-top: 10px;">
+                        <form method="POST" action="{{ url_for('data_import.trigger_sync') }}" style="display: inline;">
+                            <input type="hidden" name="service" value="{{ service.service }}">
+                            <button type="submit" class="btn btn-primary">Sync Now</button>
+                        </form>
+                        <form method="POST" action="{{ url_for('data_import.trigger_sync') }}" style="display: inline;">
+                            <input type="hidden" name="service" value="{{ service.service }}">
+                            <input type="hidden" name="full_sync" value="true">
+                            <button type="submit" class="btn btn-warning">Full Sync</button>
+                        </form>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p>No services configured or available.</p>
+            {% endif %}
+        </div>
+
+        <!-- Connection Status -->
+        <div class="card">
+            <h2>🔌 Connection Status</h2>
+            {% if status.connection_status %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Service</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for service, connected in status.connection_status.items() %}
+                    <tr>
+                        <td>{{ service|title }}</td>
+                        <td>
+                            <span class="status-indicator {{ 'status-running' if connected else 'status-stopped' }}"></span>
+                            {{ 'Connected' if connected else 'Disconnected' }}
+                        </td>
+                        <td>
+                            <button onclick="testConnection('{{ service }}')" class="btn btn-primary">Test</button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p>No connection information available.</p>
+            {% endif %}
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card">
+            <h2>⚡ Quick Actions</h2>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <form method="POST" action="{{ url_for('data_import.trigger_sync') }}" style="display: inline;">
+                    <button type="submit" class="btn btn-primary">Sync All Services</button>
+                </form>
+                <form method="POST" action="{{ url_for('data_import.trigger_sync') }}" style="display: inline;">
+                    <input type="hidden" name="full_sync" value="true">
+                    <button type="submit" class="btn btn-warning">Full Sync All</button>
+                </form>
+                <button onclick="refreshStatus()" class="btn btn-primary">Refresh Status</button>
+                <button onclick="testAllConnections()" class="btn btn-primary">Test All Connections</button>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <script>
+        function refreshStatus() {
+            location.reload();
+        }
+
+        function testConnection(service) {
+            fetch('/data-import/test-connections')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.connections && data.connections[service]) {
+                        alert(`${service}: Connected successfully`);
+                    } else {
+                        alert(`${service}: Connection failed`);
+                    }
+                })
+                .catch(error => {
+                    alert('Error testing connection: ' + error);
+                });
+        }
+
+        function testAllConnections() {
+            fetch('/data-import/test-connections')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.all_healthy) {
+                        alert('All connections are healthy!');
+                    } else {
+                        const failed = Object.entries(data.connections)
+                            .filter(([service, status]) => !status)
+                            .map(([service, status]) => service);
+                        alert(`Connection issues with: ${failed.join(', ')}`);
+                    }
+                })
+                .catch(error => {
+                    alert('Error testing connections: ' + error);
+                });
+        }
+
+        // Auto-refresh status every 30 seconds
+        setInterval(function() {
+            fetch('/data-import/status')
+                .then(response => response.json())
+                .then(data => {
+                    // Update status indicators without full page reload
+                    console.log('Status updated:', data);
+                })
+                .catch(error => {
+                    console.error('Error refreshing status:', error);
+                });
+        }, 30000);
+    </script>
+</body>
+</html>

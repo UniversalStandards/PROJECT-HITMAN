@@ -10,7 +10,10 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 
 # Configure basic logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
 
 # Import configuration settings
 try:
@@ -41,6 +44,22 @@ except ImportError:
         from models import *
     except ImportError:
         pass
+
+# Register blueprints
+try:
+    from routes import data_import_bp
+    app.register_blueprint(data_import_bp)
+    logging.info("Data import routes registered")
+except ImportError as e:
+    logging.warning(f"Could not register data import routes: {e}")
+
+# Register CLI commands
+try:
+    from cli import register_data_import_commands
+    register_data_import_commands(app)
+    logging.info("Data import CLI commands registered")
+except ImportError as e:
+    logging.warning(f"Could not register data import CLI commands: {e}")
 
 
 @app.route("/")
@@ -134,6 +153,12 @@ def reports():
         return render_template("reports.html")
     except:
         return jsonify({"message": "GOFAP Reports and Analytics"})
+
+
+@app.route('/health')
+def health_check():
+    """Health check endpoint."""
+    return {'status': 'healthy', 'service': 'GOFAP'}
 
 
 if __name__ == "__main__":
