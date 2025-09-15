@@ -2,12 +2,8 @@ import os
 import logging
 from flask import (
     Flask,
-    render_template,
     request,
     jsonify,
-    flash,
-    redirect,
-    url_for,
 )
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
@@ -40,11 +36,7 @@ try:
     from models import User, Account, Transaction, Department, Budget
 except ImportError:
     # Models module not yet created - this is expected during initial setup
-    # Try alternative import pattern from main branch
-    try:
-        from models import *
-    except ImportError:
-        pass
+    pass
 
 
 @app.route("/")
@@ -94,9 +86,12 @@ def api_create_account():
             }
         )
 
-    except Exception as e:
+    except Exception:
         logging.exception("Exception occurred while creating account")
-        return jsonify({"error": "An internal error occurred. Please try again later."}), 500
+        return (
+            jsonify({"error": "An internal error occurred. Please try again later."}),
+            500,
+        )
 
 
 @app.route("/transactions")
