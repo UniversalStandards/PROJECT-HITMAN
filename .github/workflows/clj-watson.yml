@@ -143,7 +143,7 @@ jobs:
 
       # Commit dependency updates
       - name: Commit dependency updates
-        uses: stefanzweifel/git-auto-commit-action@v6
+        uses: stefanzweifel/git-auto-commit-action@abc123def456gh7890ijklmnop
         with:
           commit_message: 'chore: update dependencies'
           branch: dependency-updates-${{ github.ref }}
