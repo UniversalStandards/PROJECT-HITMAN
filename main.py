@@ -12,11 +12,11 @@ except ImportError:
 
 # Initialize Flask application
 app = Flask(__name__)
-app.config['DEBUG'] = DEBUG
+app.config["DEBUG"] = DEBUG
 
 # Initialize the database connection
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///payment_processor.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False  # Suppress warning
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///payment_processor.db"
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False  # Suppress warning
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
@@ -28,15 +28,12 @@ except ImportError:
     pass
 
 
-@app.route('/')
+@app.route("/")
 def home():
     """Home page route for the GOFAP Payment Processor."""
-    return 'Welcome to the Government Operations and Financial Accounting Platform (GOFAP)!'
+    return "Welcome to the Government Operations and Financial Accounting Platform (GOFAP)!"
 
 
-if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='127.0.0.1', port=port, debug=DEBUG)
-
-
-
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="127.0.0.1", port=port, debug=DEBUG)
