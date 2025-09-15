@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 from gui_helpers import create_accounts
+from configs.settings import STRIPE_SECRET_KEY, MODERN_TREASURY_API_KEY
 
 
 class AccountCreationGUI:
@@ -46,11 +47,11 @@ class AccountCreationGUI:
 
     def create_modern_treasury_account(self):
         # Call the function to create a Modern Treasury account
-        create_accounts("modern_treasury", api_key=modern_treasury_api_key)
+        create_accounts("modern_treasury", api_key=MODERN_TREASURY_API_KEY)
 
     def create_stripe_customer(self):
         # Call the function to create a Stripe customer
-        create_accounts("stripe", api_key=stripe_api_key)
+        create_accounts("stripe", api_key=STRIPE_SECRET_KEY)
 
 
 if __name__ == "__main__":

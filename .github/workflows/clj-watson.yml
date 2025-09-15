@@ -119,7 +119,7 @@ jobs:
 
       # Upload SARIF files for both scans
       - name: Upload SARIF results
-        uses: github/codeql-action/upload-sarif@v2
+        uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: |
             clojure-results.sarif
@@ -143,7 +143,7 @@ jobs:
 
       # Commit dependency updates
       - name: Commit dependency updates
-        uses: stefanzweifel/git-auto-commit-action@v4
+        uses: stefanzweifel/git-auto-commit-action@v6
         with:
           commit_message: 'chore: update dependencies'
           branch: dependency-updates-${{ github.ref }}
@@ -351,7 +351,7 @@ jobs:
 
       # Upload SARIF files for both scans
       - name: Upload SARIF results
-        uses: github/codeql-action/upload-sarif@v2
+        uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: |
             snyk-clojure-results.sarif
@@ -376,7 +376,7 @@ jobs:
 
       # Commit dependency updates
       - name: Commit dependency updates
-        uses: stefanzweifel/git-auto-commit-action@v4
+        uses: stefanzweifel/git-auto-commit-action@v6
         with:
           commit_message: 'chore: update dependencies'
           branch: dependency-updates-${{ github.ref }}
