@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Add loading state to buttons on form submission
     const forms = document.querySelectorAll('form');
     forms.forEach(form => {
-        form.addEventListener('submit', function(e) {
+        form.addEventListener('submit', function() {
             const submitBtn = form.querySelector('button[type="submit"]');
             if (submitBtn) {
                 const originalText = submitBtn.innerHTML;
