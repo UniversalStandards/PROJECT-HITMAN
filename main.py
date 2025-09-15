@@ -1,4 +1,5 @@
 import os
+import logging
 from flask import (
     Flask,
     render_template,
@@ -10,6 +11,9 @@ from flask import (
 )
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
+
+# Configure basic logging
+logging.basicConfig(level=logging.INFO)
 
 # Import configuration settings
 try:
@@ -87,7 +91,8 @@ def api_create_account():
         )
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        logging.exception("Exception occurred while creating account")
+        return jsonify({"error": "An internal error occurred. Please try again later."}), 500
 
 
 @app.route("/transactions")
