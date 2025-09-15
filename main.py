@@ -19,10 +19,10 @@ logging.basicConfig(level=logging.INFO)
 try:
     from configs.settings import DEBUG, SECRET_KEY, DATABASE_URI
 except ImportError:
-    # Fallback if configs module is not available
-    DEBUG = True
-    SECRET_KEY = "dev-key-change-in-production"
-    DATABASE_URI = "sqlite:///gofap.db"
+    # Fallback if configs module is not available - compatible with main branch
+    DEBUG = os.environ.get("FLASK_DEBUG", "True").lower() in ("true", "1", "yes", "on")
+    SECRET_KEY = os.environ.get("SECRET_KEY", "dev-key-change-in-production")
+    DATABASE_URI = os.environ.get("DATABASE_URL", "sqlite:///gofap.db")
 
 # Initialize Flask application
 app = Flask(__name__)
@@ -35,12 +35,16 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
-# Import models after db initialization
+# Import models after db initialization - compatible with main branch models import pattern
 try:
     from models import User, Account, Transaction, Department, Budget
 except ImportError:
     # Models module not yet created - this is expected during initial setup
-    pass
+    # Try alternative import pattern from main branch
+    try:
+        from models import *
+    except ImportError:
+        pass
 
 
 @app.route("/")
