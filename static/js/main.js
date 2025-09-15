@@ -77,7 +77,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (confirm(`Are you sure you want to delete ${itemName}? This action cannot be undone.`)) {
                 // Proceed with deletion
                 if (this.href) {
-                    window.location.href = this.href;
+                    window.location.href = escape(this.href);
                 } else if (this.onclick) {
                     this.onclick();
                 }
