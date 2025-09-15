@@ -46,7 +46,7 @@ class AccountCreationGUI:
 
     def create_modern_treasury_account(self):
         # Call the function to create a Modern Treasury account
-        create_accounts("modern_treasury")
+        create_accounts("modern_treasury", api_key=modern_treasury_api_key)
 
     def create_stripe_customer(self):
         # Call the function to create a Stripe customer
