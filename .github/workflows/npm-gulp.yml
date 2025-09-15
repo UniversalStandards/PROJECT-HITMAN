@@ -44,7 +44,7 @@ jobs:
         run: npm audit --exit-code
 
       - name: Build artifacts
-        run: |
+        run: 
           mkdir -p build
           gulp build
 
