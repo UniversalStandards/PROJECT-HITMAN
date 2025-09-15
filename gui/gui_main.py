@@ -51,7 +51,7 @@ class AccountCreationGUI:
 
     def create_stripe_customer(self):
         # Call the function to create a Stripe customer
-        create_accounts("stripe", api_key=STRIPE_SECRET_KEY)
+        create_accounts("stripe", api_key=STRIPE_SECRET_KEY, params={})
 
 
 if __name__ == "__main__":
