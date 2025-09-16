@@ -19,7 +19,7 @@ def create_modern_treasury_account(
     }
 
     url = f"{MT_BASE_URL}/external_accounts"
-    response = requests.post(url, json=account_params, headers=headers)
+    response = requests.post(url, json=account_params, headers=headers, timeout=10)
     return response
 
 
