@@ -85,8 +85,8 @@ export default function PendingPayments() {
                       {payment.dueDate ? new Date(payment.dueDate).toLocaleDateString() : "N/A"}
                     </TableCell>
                     <TableCell>
-                      <Badge className={getStatusColor(payment.status)}>
-                        {payment.status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                      <Badge className={getStatusColor(payment.status || 'pending')}>
+                        {payment.status ? payment.status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'Pending'}
                       </Badge>
                     </TableCell>
                   </TableRow>

@@ -222,14 +222,14 @@ EMP003,Robert,,Johnson,11/08/1988,robert.j@gov.org,HR,HR Manager,03/01/2019,full
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {employees?.length === 0 ? (
+                      {(employees as any[])?.length === 0 ? (
                         <TableRow>
                           <TableCell colSpan={7} className="text-center text-muted-foreground">
                             No employees uploaded yet
                           </TableCell>
                         </TableRow>
                       ) : (
-                        employees?.map((employee: any) => (
+                        (employees as any[])?.map((employee: any) => (
                           <TableRow key={employee.id}>
                             <TableCell className="font-medium">{employee.employeeId}</TableCell>
                             <TableCell>{employee.firstName} {employee.lastName}</TableCell>

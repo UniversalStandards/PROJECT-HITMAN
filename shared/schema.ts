@@ -370,7 +370,7 @@ export const citizenServices = pgTable("citizen_services", {
 // ========== HR MANAGEMENT ==========
 
 // Employee profiles with comprehensive government HR data
-export const employees = pgTable('employees', {
+export const employees: any = pgTable('employees', {
   id: varchar('id').primaryKey().default(sql`gen_random_uuid()`),
   organizationId: varchar('organization_id').notNull().references(() => organizations.id),
   userId: varchar('user_id').references(() => users.id), // Linked after verification
@@ -493,7 +493,7 @@ export const employees = pgTable('employees', {
   creditHours: decimal('credit_hours', { precision: 5, scale: 2 }),
   
   // ========== ORGANIZATIONAL STRUCTURE ==========
-  managerId: varchar('manager_id').references(() => employees.id),
+  managerId: varchar('manager_id').references((): any => employees.id),
   teamId: varchar('team_id'),
   locationId: varchar('location_id'),
   workLocationAddress: text('work_location_address'),
