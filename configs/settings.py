@@ -4,6 +4,12 @@ import os
 from typing import Any
 
 # Debug mode setting
+DEBUG = os.environ.get("FLASK_DEBUG", "True").lower() in (
+    "true",
+    "1",
+    "yes",
+    "on",
+)
 DEBUG = os.environ.get("FLASK_DEBUG", "True").lower() in ("true", "1", "yes", "on")
 
 # Database configuration

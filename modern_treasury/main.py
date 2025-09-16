@@ -29,7 +29,9 @@ try:
     print("Response:", response.json())
 
     # Get the created account details
-    account_response = get_modern_treasury_account(modern_treasury_api_key, account_id)
+    account_response = get_modern_treasury_account(
+        modern_treasury_api_key, account_id
+    )
     print("\nAccount Details:")
     print(account_response.json())
 
