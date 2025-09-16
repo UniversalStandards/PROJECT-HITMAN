@@ -5,7 +5,7 @@ import logging
 
 # Try to import the newer async helpers first, fall back to compatibility mode
 try:
-    from gui_helpers import create_accounts_async, create_accounts
+    from gui_helpers import create_accounts  # Removed create_accounts_async from import
     HAS_ASYNC_HELPERS = True
 except ImportError:
     # Fallback to simple synchronous functions for main branch compatibility
