@@ -22,6 +22,13 @@ for static_dir in static_dirs:
     os.makedirs(static_dir, exist_ok=True)
 
 # Sample files - enhanced for Flask web interface
+# Main folders
+folders = ["configs", "issuers", "models", "services", "tests"]
+for folder in folders:
+    os.makedirs(folder)
+    Path(f"{folder}/__init__.py").touch()
+
+# Sample files
 with open("main.py", "w") as f:
     f.write("""import os
 from flask import Flask
@@ -104,6 +111,7 @@ with open("services/stripe/__init__.py", "w") as f:
 with open("services/stripe/stripe.py", "w") as f:
     f.write("from .service import Service\nclass StripeService(Service):\n    pass")
 
+
 # Enhanced configuration - merging main branch with improvements
 with open("configs/settings.py", "w") as f:
     f.write("""\"\"\"Configuration settings for GOFAP (Government Operations and Financial Accounting Platform).\"\"\"
@@ -134,6 +142,7 @@ def get_config(key: str, default: Any = None) -> Any:
     \"\"\"Get configuration value with fallback to default.\"\"\"
     return os.environ.get(key, default)
 """)
+    f.write("DEBUG=True")
 
 with open("tests/test_transactions.py", "w") as f:
     f.write("import unittest \n\nclass TestTransactions(unittest.TestCase):\n    pass")

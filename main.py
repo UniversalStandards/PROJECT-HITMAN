@@ -2,12 +2,8 @@ import os
 import logging
 from flask import (
     Flask,
-    render_template,
     request,
     jsonify,
-    flash,
-    redirect,
-    url_for,
 )
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
@@ -51,24 +47,28 @@ except ImportError:
 def home():
     """Home page route for the GOFAP Payment Processor."""
     return render_template("index.html")
+    return "Welcome to the Government Operations and Financial Accounting Platform (GOFAP)!"
 
 
 @app.route("/dashboard")
 def dashboard():
     """Dashboard page showing system overview."""
     return render_template("dashboard.html")
+    return jsonify({"message": "GOFAP Dashboard - System Overview"})
 
 
 @app.route("/accounts")
 def accounts():
     """Accounts management page."""
     return render_template("accounts.html")
+    return jsonify({"message": "GOFAP Account Management"})
 
 
 @app.route("/accounts/create")
 def create_account():
     """Account creation page."""
     return render_template("create_account.html")
+    return jsonify({"message": "GOFAP Account Creation"})
 
 
 @app.route("/api/accounts/create", methods=["POST"])
@@ -97,24 +97,33 @@ def api_create_account():
     except Exception as e:
         logging.exception("Exception occurred while creating account")
         return jsonify({"error": "An internal error occurred. Please try again later."}), 500
+    except Exception:
+        logging.exception("Exception occurred while creating account")
+        return (
+            jsonify({"error": "An internal error occurred. Please try again later."}),
+            500,
+        )
 
 
 @app.route("/transactions")
 def transactions():
     """Transactions page."""
     return render_template("transactions.html")
+    return jsonify({"message": "GOFAP Transaction Management"})
 
 
 @app.route("/budgets")
 def budgets():
     """Budgets page."""
     return render_template("budgets.html")
+    return jsonify({"message": "GOFAP Budget Management"})
 
 
 @app.route("/reports")
 def reports():
     """Reports and analytics page."""
     return render_template("reports.html")
+    return jsonify({"message": "GOFAP Reports and Analytics"})
 
 
 if __name__ == "__main__":

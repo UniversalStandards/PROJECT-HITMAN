@@ -1,6 +1,5 @@
 import logging
-import time
-from typing import Any, Dict, Optional, Callable
+from typing import Any, Dict, Optional
 import os
 from functools import wraps
 import asyncio
@@ -40,12 +39,14 @@ def backoff(start_sleep_time=0.1, factor=2, max_sleep_time=3):
 async def process_response(
     response: Dict[str, Any], service: str
 ) -> Optional[str]:
+async def process_response(response: Dict[str, Any], service: str) -> Optional[str]:
     if response.get("success"):
         return response.get(service)
     else:
         logger.error(
             f"Error processing {service} response: "
             f"{response.get('error', 'Unknown error')}"
+            f"Error processing {service} response: {response.get('error', 'Unknown error')}"
         )
         return None
 
@@ -70,6 +71,7 @@ async def create_stripe_account(
 
 # Controller function to route to the correct asynchronous account creation function
 async def create_accounts_async(
+async def create_accounts(
     service: str, api_key: str, params: Dict[str, Any]
 ) -> Optional[str]:
     service_creation_map = {
@@ -117,3 +119,5 @@ def create_accounts(
     except Exception as e:
         logger.error(f"Error in synchronous create_accounts: {e}")
         return None
+# Update if additional features or enhancements are needed
+# ...

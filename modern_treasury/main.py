@@ -23,9 +23,7 @@ account_params = {
 
 try:
     # Create the Modern Treasury account
-    response = create_modern_treasury_account(
-        modern_treasury_api_key, account_params
-    )
+    response = create_modern_treasury_account(modern_treasury_api_key, account_params)
     account_id = response.json()["id"]
     print(f"Account created successfully. Account ID: {account_id}")
     print("Response:", response.json())

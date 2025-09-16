@@ -23,6 +23,8 @@ logger = logging.getLogger(__name__)
 # Get API keys from environment
 stripe_api_key = os.environ.get("STRIPE_SECRET_KEY", "")
 modern_treasury_api_key = os.environ.get("MODERN_TREASURY_API_KEY", "")
+from gui_helpers import create_accounts
+from configs.settings import STRIPE_SECRET_KEY, MODERN_TREASURY_API_KEY
 
 
 class AccountCreationGUI:
@@ -52,6 +54,7 @@ class AccountCreationGUI:
             self.modern_treasury_tab, text="Modern Treasury Account Creation"
         ).grid(column=0, row=0, pady=10)
         
+        ).grid(column=0, row=0)
         ttk.Button(
             self.modern_treasury_tab,
             text="Create Account",
@@ -61,6 +64,7 @@ class AccountCreationGUI:
         # Status label for feedback
         self.mt_status = ttk.Label(self.modern_treasury_tab, text="")
         self.mt_status.grid(column=0, row=2, pady=5)
+        ).grid(column=0, row=1)
 
     def create_stripe_widgets(self):
         # Widgets for Stripe tab
@@ -109,6 +113,19 @@ class AccountCreationGUI:
         except Exception as e:
             self.stripe_status.config(text=f"Error: {str(e)}")
             logger.error(f"Error creating Stripe customer: {e}")
+            column=0, row=0
+        )
+        ttk.Button(
+            self.stripe_tab, text="Create Customer", command=self.create_stripe_customer
+        ).grid(column=0, row=1)
+
+    def create_modern_treasury_account(self):
+        # Call the function to create a Modern Treasury account
+        create_accounts("modern_treasury", api_key=MODERN_TREASURY_API_KEY)
+
+    def create_stripe_customer(self):
+        # Call the function to create a Stripe customer
+        create_accounts("stripe", api_key=STRIPE_SECRET_KEY, params={})
 
 
 if __name__ == "__main__":

@@ -5,6 +5,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+
 def create_stripe_customer(params):
     """Create a Stripe customer."""
     return stripe.Customer.create(**params)
@@ -21,3 +22,4 @@ async def create_stripe_customer_async(
     except Exception as e:
         logger.error(f"Error creating Stripe customer: {e}")
         return {"success": False, "error": str(e)}
+    return stripe.Customer.create(**params)

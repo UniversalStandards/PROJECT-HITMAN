@@ -10,6 +10,7 @@ DEBUG = os.environ.get("FLASK_DEBUG", "True").lower() in (
     "yes",
     "on",
 )
+DEBUG = os.environ.get("FLASK_DEBUG", "True").lower() in ("true", "1", "yes", "on")
 
 # Database configuration
 DATABASE_URI = os.environ.get("DATABASE_URL", "sqlite:///gofap.db")

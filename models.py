@@ -2,7 +2,6 @@
 
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
-# from typing import Optional
 
 # This will be initialized in main.py
 db = SQLAlchemy()
@@ -41,6 +40,7 @@ class Account(db.Model):
     account_type = db.Column(
         db.String(50), nullable=False
     )  # checking, savings, etc.
+    account_type = db.Column(db.String(50), nullable=False)  # checking, savings, etc.
     balance = db.Column(db.Numeric(precision=15, scale=2), default=0.00)
     currency = db.Column(db.String(3), default="USD")
     bank_name = db.Column(db.String(100))
@@ -80,6 +80,11 @@ class Transaction(db.Model):
     account_id = db.Column(
         db.Integer, db.ForeignKey("accounts.id"), nullable=False
     )
+    transaction_type = db.Column(db.String(50), nullable=False)  # debit, credit
+    category = db.Column(db.String(100))
+    description = db.Column(db.String(255))
+    status = db.Column(db.String(20), default="pending")
+    account_id = db.Column(db.Integer, db.ForeignKey("accounts.id"), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     processed_at = db.Column(db.DateTime)
 
@@ -90,6 +95,7 @@ class Transaction(db.Model):
     account = db.relationship(
         "Account", backref=db.backref("transactions", lazy=True)
     )
+    account = db.relationship("Account", backref=db.backref("transactions", lazy=True))
 
     def __repr__(self) -> str:
         return f"<Transaction {self.transaction_id}>"
@@ -107,6 +113,7 @@ class Department(db.Model):
     budget_allocated = db.Column(
         db.Numeric(precision=15, scale=2), default=0.00
     )
+    budget_allocated = db.Column(db.Numeric(precision=15, scale=2), default=0.00)
     budget_spent = db.Column(db.Numeric(precision=15, scale=2), default=0.00)
     head_user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
     is_active = db.Column(db.Boolean, default=True)
@@ -118,6 +125,7 @@ class Department(db.Model):
     head = db.relationship(
         "User", backref=db.backref("department_head", lazy=True)
     )
+    head = db.relationship("User", backref=db.backref("department_head", lazy=True))
 
     def __repr__(self) -> str:
         return f"<Department {self.name}>"
@@ -141,6 +149,9 @@ class Budget(db.Model):
     remaining_amount = db.Column(
         db.Numeric(precision=15, scale=2), default=0.00
     )
+    allocated_amount = db.Column(db.Numeric(precision=15, scale=2), nullable=False)
+    spent_amount = db.Column(db.Numeric(precision=15, scale=2), default=0.00)
+    remaining_amount = db.Column(db.Numeric(precision=15, scale=2), default=0.00)
     status = db.Column(db.String(20), default="active")
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(
@@ -153,3 +164,9 @@ class Budget(db.Model):
 
     def __repr__(self) -> str:
         return f"<Budget {self.department.name} - {self.category} - FY{self.fiscal_year}>"
+    department = db.relationship("Department", backref=db.backref("budgets", lazy=True))
+
+    def __repr__(self) -> str:
+        return (
+            f"<Budget {self.department.name} - {self.category} - FY{self.fiscal_year}>"
+        )
