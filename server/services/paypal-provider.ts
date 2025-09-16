@@ -59,9 +59,9 @@ export class PayPalProvider extends BaseProvider {
         return { success: false, error: 'Invalid amount' };
       }
 
-      const orderRequest = {
+      const orderRequest: any = {
         body: {
-          intent: 'CAPTURE',
+          intent: 'CAPTURE' as any,
           purchaseUnits: [{
             amount: {
               currencyCode: currency.toUpperCase(),

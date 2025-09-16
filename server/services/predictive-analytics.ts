@@ -225,7 +225,7 @@ export class PredictiveAnalyticsService {
           score: pattern.anomalyScore,
           description: pattern.description,
           detectedAt: new Date(),
-          entities: pattern.expenses.map(e => ({ type: 'expense', id: e.id, value: e.amount })),
+          entities: pattern.expenses.map((e: any) => ({ type: 'expense', id: e.id, value: e.amount })),
           recommendations: [
             'Review expense approval process',
             'Update expense policies',

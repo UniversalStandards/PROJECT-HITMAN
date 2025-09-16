@@ -36,6 +36,7 @@ export interface ComplianceResult {
   flags?: string[];
   approved?: boolean;
   requiresReview?: boolean;
+  error?: string;
   details?: Record<string, any>;
 }
 
