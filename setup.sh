@@ -2,7 +2,7 @@
 
 # Create the main project folder
 mkdir modern_treasury
-cd modern_treasury
+cd modern_treasury || exit
 
 
 
