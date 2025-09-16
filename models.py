@@ -2,7 +2,7 @@
 
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
-from typing import Optional
+# from typing import Optional
 
 # This will be initialized in main.py
 db = SQLAlchemy()
