@@ -20,6 +20,7 @@ parts/
 sdist/
 var/
 wheels/
+pip-wheel-metadata/
 share/python-wheels/
 *.egg-info/
 .installed.cfg
@@ -110,6 +111,12 @@ ipython_config.py
 .pdm.toml
 
 # PEP 582; used by e.g. github.com/David-OConnor/pyflow and github.com/pdm-project/pdm
+.python-version
+
+# pipenv
+Pipfile.lock
+
+# PEP 582
 __pypackages__/
 
 # Celery stuff
@@ -170,3 +177,52 @@ cython_debug/
 # OS files
 .DS_Store
 Thumbs.db
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Configuration files with secrets
+.env.local
+.env.production
+config.local.py
+secrets.py
+
+# Temporary files
+*.tmp
+*.temp
+/tmp/
+temp/
+
+# Log files
+*.log
+logs/
+
+# Node.js (if used for frontend)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Government-specific sensitive files
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
