@@ -1,3 +1,6 @@
+import os
+
+DEBUG = os.environ.get('DEBUG', 'False').lower() in ('true', '1', 'yes')
 """Configuration settings for GOFAP (Government Operations and Financial Accounting Platform)."""
 
 import os
