@@ -1,9 +1,10 @@
-modules = ["nodejs-20", "web", "postgresql-16"]
+modules = ["nodejs-20", "web", "postgresql-16", "nodejs-22", "nodejs-23", "nodejs-19", "python-3.9", "python-3.8", "python-base-3.13", "qbasic", "swift-5.8", "svelte-kit-node-20", "swift-5.6", "typescript-language-server", "pyright", "python-with-prybar-3.10", "docker", "pyright-extended"]
 run = "npm run dev"
 hidden = [".config", ".git", "generated-icon.png", "node_modules", "dist"]
 
 [nix]
 channel = "stable-24_05"
+packages = ["chatgpt-cli"]
 
 [deployment]
 deploymentTarget = "autoscale"
