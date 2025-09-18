@@ -370,7 +370,7 @@ export const citizenServices = pgTable("citizen_services", {
 // ========== HR MANAGEMENT ==========
 
 // Employee profiles with comprehensive government HR data
-export const employees: any = pgTable('employees', {
+export const employees: Employee = pgTable('employees', {
   id: varchar('id').primaryKey().default(sql`gen_random_uuid()`),
   organizationId: varchar('organization_id').notNull().references(() => organizations.id),
   userId: varchar('user_id').references(() => users.id), // Linked after verification
