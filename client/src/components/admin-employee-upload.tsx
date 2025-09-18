@@ -222,7 +222,7 @@ EMP003,Robert,,Johnson,11/08/1988,robert.j@gov.org,HR,HR Manager,03/01/2019,full
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {(employees as any[])?.length === 0 ? (
+                      {(employees as Employee[])?.length === 0 ? (
                         <TableRow>
                           <TableCell colSpan={7} className="text-center text-muted-foreground">
                             No employees uploaded yet
