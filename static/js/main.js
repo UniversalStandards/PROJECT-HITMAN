@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', function() {
     setTimeout(function() {
         var alerts = document.querySelectorAll('.alert');
         alerts.forEach(function(alert) {
-            var bsAlert = new bootstrap.Alert(alert);
+            import bootstrap from 'bootstrap';
             bsAlert.close();
         });
     }, 5000);
