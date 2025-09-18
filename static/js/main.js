@@ -151,7 +151,7 @@ const GOFAP = {
             }
             
             try {
-                const response = await fetch(url, {
+                const allowedUrls = ['https://example.com/api', 'https://another-safe-site.com/api']; if (!allowedUrls.includes(url)) throw new Error('URL not allowed');
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
