@@ -21,7 +21,7 @@ export default function StatsCards() {
     },
     {
       title: "Monthly Expenses",
-      value: stats ? `$${parseFloat((stats as unknown).monthlyExpenses || "0").toLocaleString()}` : "$0",
+      value: stats ? `$${parseFloat((stats as { totalBudget: number; monthlyExpenses: number }).monthlyExpenses || "0").toLocaleString()}` : "$0",
       change: "-3.2%",
       changeLabel: "from last month",
       icon: CreditCard,
