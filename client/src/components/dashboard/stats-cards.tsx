@@ -11,7 +11,7 @@ export default function StatsCards() {
   const statsCards = [
     {
       title: "Total Budget",
-      value: stats ? `$${parseFloat((stats as any).totalBudget || "0").toLocaleString()}` : "$0",
+      value: stats ? `$${parseFloat((stats as { totalBudget: number; monthlyExpenses: number }).totalBudget || "0").toLocaleString()}` : "$0",
       change: "+12.5%",
       changeLabel: "from last month",
       icon: DollarSign,
