@@ -2,7 +2,7 @@
 
 :root {
     /* Primary Colors */
-    --primary-color: #007bff;
+    --bg-dark: #343a40; }
     --secondary-color: #6c757d;
     --success-color: #28a745;
     --danger-color: #dc3545;
