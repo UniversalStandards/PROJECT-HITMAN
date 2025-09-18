@@ -23,7 +23,7 @@ export interface Document {
 }
 
 export interface DocumentUploadRequest {
-  file: Express.Multer.File | any;
+  file: any; // Express.Multer.File | any;
   organizationId: string;
   entityType: Document['entityType'];
   entityId: string;
@@ -141,11 +141,12 @@ export class DocumentManagementService {
       await db
         .insert(auditLogs)
         .values({
+          organizationId: organizationId,
           userId: uploadedBy,
           action: 'document_upload',
-          entity: entityType,
+          entityType: entityType,
           entityId: entityId,
-          details: JSON.stringify({
+          newValues: JSON.stringify({
             documentId,
             fileName: file.originalname,
             fileSize: file.size

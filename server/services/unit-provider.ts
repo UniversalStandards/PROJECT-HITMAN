@@ -115,6 +115,35 @@ export class UnitProvider extends BaseProvider {
     }
   }
 
+  async processInstantTransfer(
+    amount: number, 
+    fromAccount: string, 
+    toAccount: string
+  ): Promise<TransferResult> {
+    try {
+      const transferId = `unit_instant_${Date.now()}`;
+      const estimatedSettlement = new Date();
+      estimatedSettlement.setMinutes(estimatedSettlement.getMinutes() + 15); // 15 minute settlement
+      const fees = 3.0; // Higher fee for instant transfers
+
+      this.logTransaction('processInstantTransfer', { amount, fromAccount, toAccount });
+
+      return {
+        success: true,
+        transferId,
+        providerTransactionId: `unit_${Math.random().toString(36).substring(7)}`,
+        status: 'processing',
+        estimatedSettlement,
+        fees
+      };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Instant transfer failed' 
+      };
+    }
+  }
+
   async processWire(
     amount: number, 
     fromAccount: string, 

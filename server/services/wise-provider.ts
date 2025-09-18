@@ -1,4 +1,4 @@
-import { BaseProvider, BaseProviderConfig, PaymentResult, TransferResult, ComplianceResult } from './base-provider';
+import { BaseProvider, BaseProviderConfig, PaymentResult, TransferResult, CardIssueResult, ComplianceResult } from './base-provider';
 
 export interface WiseConfig extends BaseProviderConfig {
   apiToken: string;
@@ -52,6 +52,133 @@ export class WiseProvider extends BaseProvider {
       return { 
         success: false, 
         error: error instanceof Error ? error.message : 'Payment processing failed' 
+      };
+    }
+  }
+
+  async processACH(
+    amount: number, 
+    fromAccount: string, 
+    toAccount: string, 
+    type: 'standard' | 'same_day' | 'next_day' = 'standard'
+  ): Promise<TransferResult> {
+    try {
+      const transferId = `wise_ach_${Date.now()}`;
+      const estimatedSettlement = new Date();
+      let fees = 4.95; // Wise ACH fee
+
+      switch (type) {
+        case 'same_day':
+          estimatedSettlement.setHours(estimatedSettlement.getHours() + 4);
+          fees = 12.50;
+          break;
+        case 'next_day':
+          estimatedSettlement.setDate(estimatedSettlement.getDate() + 1);
+          fees = 7.50;
+          break;
+        default:
+          estimatedSettlement.setDate(estimatedSettlement.getDate() + 2);
+      }
+
+      this.logTransaction('processACH', { amount, type, fromAccount, toAccount });
+
+      return {
+        success: true,
+        transferId,
+        providerTransactionId: `wise_${Math.random().toString(36).substring(7)}`,
+        status: 'processing',
+        estimatedSettlement,
+        fees
+      };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'ACH transfer failed' 
+      };
+    }
+  }
+
+  async processInstantTransfer(
+    amount: number, 
+    fromAccount: string, 
+    toAccount: string
+  ): Promise<TransferResult> {
+    try {
+      const transferId = `wise_instant_${Date.now()}`;
+      const estimatedSettlement = new Date();
+      estimatedSettlement.setMinutes(estimatedSettlement.getMinutes() + 30); // 30 minute settlement
+      const fees = amount * 0.012; // 1.2% fee for instant transfers
+
+      this.logTransaction('processInstantTransfer', { amount, fromAccount, toAccount });
+
+      return {
+        success: true,
+        transferId,
+        providerTransactionId: `wise_${Math.random().toString(36).substring(7)}`,
+        status: 'processing',
+        estimatedSettlement,
+        fees
+      };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Instant transfer failed' 
+      };
+    }
+  }
+
+  async issueCard(holderName: string, type: 'debit' | 'credit' | 'virtual', limits?: Record<string, number>): Promise<CardIssueResult> {
+    try {
+      const cardId = `wise_card_${Date.now()}`;
+      const last4 = Math.floor(Math.random() * 9000 + 1000).toString();
+      
+      this.logTransaction('issueCard', { holderName, type, cardId });
+
+      return {
+        success: true,
+        cardId,
+        cardNumber: `**** **** **** ${last4}`,
+        expiryDate: new Date(Date.now() + 3 * 365 * 24 * 60 * 60 * 1000).toISOString().slice(0, 7),
+        status: 'active'
+      };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Card issuance failed' 
+      };
+    }
+  }
+
+  async blockCard(cardId: string): Promise<PaymentResult> {
+    try {
+      this.logTransaction('blockCard', { cardId });
+      
+      return {
+        success: true,
+        transactionId: `wise_block_${Date.now()}`,
+        metadata: { cardId, status: 'blocked' }
+      };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Card blocking failed' 
+      };
+    }
+  }
+
+  async activateCard(cardId: string): Promise<PaymentResult> {
+    try {
+      this.logTransaction('activateCard', { cardId });
+      
+      return {
+        success: true,
+        transactionId: `wise_activate_${Date.now()}`,
+        metadata: { cardId, status: 'active' }
+      };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Card activation failed' 
       };
     }
   }

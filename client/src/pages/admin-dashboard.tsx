@@ -129,12 +129,12 @@ export default function AdminDashboard() {
           </div>
 
           {/* System Health Status */}
-          <Alert className={health?.error ? 'border-destructive' : 'border-green-500'}>
+          <Alert className={(health as any)?.error ? 'border-destructive' : 'border-green-500'}>
             <Activity className="h-4 w-4" />
             <AlertDescription>
               <span className="font-medium">System Status: </span>
-              {health?.error ? (
-                <span className="text-destructive">Issues Detected - {health.error}</span>
+              {(health as any)?.error ? (
+                <span className="text-destructive">Issues Detected - {(health as any).error}</span>
               ) : (
                 <span className="text-green-600">All Systems Operational</span>
               )}
@@ -150,7 +150,7 @@ export default function AdminDashboard() {
                     <div>
                       <p className="text-sm text-muted-foreground">Total Budget</p>
                       <p className="text-2xl font-bold">
-                        ${parseInt(analytics.overview?.financial?.totalBudget || '0').toLocaleString()}
+                        ${parseInt((analytics as any).overview?.financial?.totalBudget || '0').toLocaleString()}
                       </p>
                     </div>
                     <TrendingUp className="h-8 w-8 text-muted-foreground" />
@@ -164,7 +164,7 @@ export default function AdminDashboard() {
                     <div>
                       <p className="text-sm text-muted-foreground">Total Payments</p>
                       <p className="text-2xl font-bold">
-                        ${parseInt(analytics.overview?.financial?.totalPayments || '0').toLocaleString()}
+                        ${parseInt((analytics as any).overview?.financial?.totalPayments || '0').toLocaleString()}
                       </p>
                     </div>
                     <DollarSign className="h-8 w-8 text-muted-foreground" />
@@ -178,7 +178,7 @@ export default function AdminDashboard() {
                     <div>
                       <p className="text-sm text-muted-foreground">Active Vendors</p>
                       <p className="text-2xl font-bold">
-                        {analytics.overview?.operational?.activeVendors || 0}
+                        {(analytics as any).overview?.operational?.activeVendors || 0}
                       </p>
                     </div>
                     <Users className="h-8 w-8 text-muted-foreground" />
@@ -192,7 +192,7 @@ export default function AdminDashboard() {
                     <div>
                       <p className="text-sm text-muted-foreground">Active Grants</p>
                       <p className="text-2xl font-bold">
-                        {analytics.overview?.operational?.activeGrants || 0}
+                        {(analytics as any).overview?.operational?.activeGrants || 0}
                       </p>
                     </div>
                     <Briefcase className="h-8 w-8 text-muted-foreground" />
@@ -237,7 +237,7 @@ export default function AdminDashboard() {
                   <CardContent>
                     <div className="space-y-4">
                       {category.providers.map((provider) => {
-                        const providerHealth = health?.[key]?.providers?.find((p: any) => 
+                        const providerHealth = (health as any)?.[key]?.providers?.find((p: any) => 
                           p.name === provider
                         );
                         const isActive = providerHealth?.status === 'active';
@@ -364,7 +364,7 @@ export default function AdminDashboard() {
                 </Card>
 
                 {/* Provider-specific analytics */}
-                {analytics?.providers && key === 'payment' && (
+                {(analytics as any)?.providers && key === 'payment' && (
                   <Card>
                     <CardHeader>
                       <CardTitle>Provider Performance</CardTitle>
@@ -372,7 +372,7 @@ export default function AdminDashboard() {
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-4">
-                        {analytics.providers.map((provider: any) => (
+                        {((analytics as any).providers || []).map((provider: any) => (
                           <div key={provider.provider} className="space-y-2">
                             <div className="flex justify-between items-center">
                               <span className="font-medium capitalize">
@@ -401,7 +401,7 @@ export default function AdminDashboard() {
           </Tabs>
 
           {/* Compliance Analytics */}
-          {analytics?.compliance && (
+          {(analytics as any)?.compliance && (
             <Card className="mt-6">
               <CardHeader>
                 <CardTitle>Compliance Overview</CardTitle>
@@ -411,19 +411,19 @@ export default function AdminDashboard() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="text-center">
                     <p className="text-3xl font-bold">
-                      {analytics.compliance.complianceRate?.toFixed(1) || 0}%
+                      {(analytics as any).compliance.complianceRate?.toFixed(1) || 0}%
                     </p>
                     <p className="text-sm text-muted-foreground">Compliance Rate</p>
                   </div>
                   <div className="text-center">
                     <p className="text-3xl font-bold text-orange-600">
-                      {analytics.compliance.pendingReviewCount || 0}
+                      {(analytics as any).compliance.pendingReviewCount || 0}
                     </p>
                     <p className="text-sm text-muted-foreground">Pending Reviews</p>
                   </div>
                   <div className="text-center">
                     <p className="text-3xl font-bold text-red-600">
-                      {analytics.compliance.highRiskCount || 0}
+                      {(analytics as any).compliance.highRiskCount || 0}
                     </p>
                     <p className="text-sm text-muted-foreground">High Risk Entities</p>
                   </div>
@@ -433,7 +433,7 @@ export default function AdminDashboard() {
           )}
 
           {/* Grant Analytics */}
-          {analytics?.grants && (
+          {(analytics as any)?.grants && (
             <Card className="mt-6">
               <CardHeader>
                 <CardTitle>Grant Management</CardTitle>
@@ -443,22 +443,22 @@ export default function AdminDashboard() {
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                   <div>
                     <p className="text-sm text-muted-foreground">Total Grants</p>
-                    <p className="text-2xl font-bold">{analytics.grants.totalGrants}</p>
+                    <p className="text-2xl font-bold">{(analytics as any).grants.totalGrants}</p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Total Amount</p>
-                    <p className="text-2xl font-bold">${analytics.grants.totalAmount.toLocaleString()}</p>
+                    <p className="text-2xl font-bold">${(analytics as any).grants.totalAmount.toLocaleString()}</p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Utilization</p>
-                    <p className="text-2xl font-bold">{analytics.grants.utilizationRate.toFixed(1)}%</p>
+                    <p className="text-2xl font-bold">{(analytics as any).grants.utilizationRate.toFixed(1)}%</p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Remaining</p>
-                    <p className="text-2xl font-bold">${analytics.grants.remainingBalance.toLocaleString()}</p>
+                    <p className="text-2xl font-bold">${(analytics as any).grants.remainingBalance.toLocaleString()}</p>
                   </div>
                 </div>
-                <Progress value={analytics.grants.utilizationRate} className="mt-4" />
+                <Progress value={(analytics as any).grants.utilizationRate} className="mt-4" />
               </CardContent>
             </Card>
           )}

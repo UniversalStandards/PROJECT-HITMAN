@@ -11,7 +11,7 @@ export default function StatsCards() {
   const statsCards = [
     {
       title: "Total Budget",
-      value: stats ? `$${parseFloat(stats.totalBudget || "0").toLocaleString()}` : "$0",
+      value: stats ? `$${parseFloat((stats as { totalBudget: number; monthlyExpenses: number }).totalBudget || "0").toLocaleString()}` : "$0",
       change: "+12.5%",
       changeLabel: "from last month",
       icon: DollarSign,
@@ -21,7 +21,7 @@ export default function StatsCards() {
     },
     {
       title: "Monthly Expenses",
-      value: stats ? `$${parseFloat(stats.monthlyExpenses || "0").toLocaleString()}` : "$0",
+      value: stats ? `$${parseFloat((stats as { totalBudget: number; monthlyExpenses: number }).monthlyExpenses || "0").toLocaleString()}` : "$0",
       change: "-3.2%",
       changeLabel: "from last month",
       icon: CreditCard,
@@ -31,7 +31,7 @@ export default function StatsCards() {
     },
     {
       title: "Active Vendors",
-      value: stats ? stats.activeVendors.toString() : "0",
+      value: stats ? (stats as any).activeVendors?.toString() || "0" : "0",
       change: "+8",
       changeLabel: "this month",
       icon: Building,
@@ -41,7 +41,7 @@ export default function StatsCards() {
     },
     {
       title: "Pending Payments",
-      value: stats ? stats.pendingPayments.toString() : "0",
+      value: stats ? (stats as any).pendingPayments?.toString() || "0" : "0",
       change: "$45.2K total",
       changeLabel: "",
       icon: Clock,
