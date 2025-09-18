@@ -244,7 +244,7 @@ const GOFAP = {
     // Sanitize HTML content
     sanitizeHtml: function(html) {
         const div = document.createElement('div');
-        div.textContent = html;
+        div.innerHTML = html;
         return div.innerHTML;
     }
 };
