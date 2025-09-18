@@ -67,7 +67,7 @@ export default function RecentActivity() {
           </div>
         ) : (
           <div className="space-y-4">
-            {(activity as any[])?.slice(0, 4).map((item: any, index: number) => (
+            {(activity as any[]).slice(0, 4).map((item: any, index: number) => (
               <div key={item.id || index} className="flex items-start space-x-3">
                 <div className="w-8 h-8 bg-chart-2/10 rounded-full flex items-center justify-center flex-shrink-0">
                   {getActivityIcon(item.type)}
