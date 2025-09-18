@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize popovers
     var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
     popoverTriggerList.forEach(function (popoverTriggerEl) { new bootstrap.Popover(popoverTriggerEl); });
-        return new bootstrap.Popover(popoverTriggerEl);
+        import 'bootstrap'; // Ensure Bootstrap is imported
     });
 
     // Auto-hide alerts after 5 seconds
