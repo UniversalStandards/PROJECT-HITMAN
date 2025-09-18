@@ -229,7 +229,7 @@ EMP003,Robert,,Johnson,11/08/1988,robert.j@gov.org,HR,HR Manager,03/01/2019,full
                           </TableCell>
                         </TableRow>
                       ) : (
-                        (employees as any[])?.map((employee: any) => (
+                        (employees as any[]).map((employee: any) => (
                           <TableRow key={employee.id}>
                             <TableCell className="font-medium">{employee.employeeId}</TableCell>
                             <TableCell>{employee.firstName} {employee.lastName}</TableCell>
