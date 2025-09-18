@@ -11,7 +11,7 @@ from models import (  # noqa: F401
     db,
     User,
     Account,
-    Transaction,
+    # Transaction,
     UserRole,
     AccountType,
     TransactionType,
