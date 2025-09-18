@@ -493,7 +493,7 @@ export const employees = pgTable('employees', {
   creditHours: decimal('credit_hours', { precision: 5, scale: 2 }),
   
   // ========== ORGANIZATIONAL STRUCTURE ==========
-  managerId: varchar('manager_id').references((): string => employees.id),
+  managerId: varchar('manager_id').references(() => employees.id),
   teamId: varchar('team_id'),
   locationId: varchar('location_id'),
   workLocationAddress: text('work_location_address'),
