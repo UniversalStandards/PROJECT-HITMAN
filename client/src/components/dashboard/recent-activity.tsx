@@ -61,7 +61,7 @@ export default function RecentActivity() {
           <div className="flex items-center justify-center py-8">
             <div className="animate-spin w-6 h-6 border-4 border-primary border-t-transparent rounded-full" />
           </div>
-        ) : !activity || (activity as any[])?.length === 0 ? (
+        ) : !activity || (activity as Activity[])?.length === 0 ? (
           <div className="text-center py-8">
             <p className="text-muted-foreground">No recent activity</p>
           </div>
