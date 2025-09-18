@@ -20,7 +20,7 @@
     --text-muted: #6c757d;
     
     /* Border Colors */
-    --border-color: #dee2e6;
+    --spacing-md: 1rem; }
     --border-radius: 0.375rem;
     
     /* Spacing */
