@@ -1,69 +1,66 @@
 import os
 from pathlib import Path
 
-# Root folder files
-Path("LICENSE").touch()  
-Path("Procfile").touch()
-with open("README.md", "w") as f:
-    f.write("# Payment Processor Project")
+# Create necessary files in the root folder
+root_files = ["LICENSE", "Procfile", "README.md", "runtime.txt"]
+for file_name in root_files:
+    with open(file_name, "w") as f:
+        if file_name == "README.md":
+            f.write("# Payment Processor Project")
+        elif file_name == "runtime.txt":
+            f.write("python-3.8.1")
+    
+# Define main folders
+main_folders = ["configs", "issuers", "models", "services", "tests"]
+for folder in main_folders:
+    os.makedirs(folder, exist_ok=True)
+    Path(f"{folder}/__init__.py").touch()
 
-with open("runtime.txt", "w") as f: 
-    f.write("python-3.8.1")
+# Create sample files
+sample_files = {
+    "main.py": "print('Payment processor app')",
+    "app.py": "from .main import main\nmain()",
+    "requirements.txt": "flask"
+}
 
-# Main folders    
-folders = ["configs", "issuers", "models", "services", "tests"]
-for folder in folders:
-    os.makedirs(folder)
-    Path(f"{folder}/__init__.py").touch() 
+for file_name, content in sample_files.items():
+    with open(file_name, "w") as f:
+        f.write(content)
 
-# Sample files    
-with open("main.py", "w") as f:
-    f.write("print('Payment processor app')")
+# Define issuer subfolders and create __init__.py files
+issuer_folders = ["credit_card", "paypal", "stripe"]
+for issuer in issuer_folders:
+    folder_path = f"issuers/{issuer}"
+    os.makedirs(folder_path, exist_ok=True)
+    with open(f"{folder_path}/__init__.py", "w") as f:
+        f.write(f"from .{issuer} import {issuer.capitalize()}Issuer\n{issuer.capitalize()}Issuer()")
+    with open(f"{folder_path}/{issuer}.py", "w") as f:
+        f.write(f"from .issuer import Issuer\nclass {issuer.capitalize()}Issuer(Issuer):\n    pass")
 
-with open("app.py", "w") as f:
-    f.write("from .main import main\nmain()")
-with open("requirements.txt", "w") as f:
-    f.write("flask")
-# Issuer folders
-issuer_folders = ["issuers/credit_card", "issuers/paypal", "issuers/stripe"]
-for issuer_folder in issuer_folders:
-    os.makedirs(issuer_folder)
-    Path(f"{issuer_folder}/__init__.py").touch()
-# Issuer files
-with open("issuers/credit_card/__init__.py", "w") as f:
-    f.write("from .credit_card import CreditCardIssuer\nCreditCardIssuer()")
-with open("issuers/credit_card/credit_card.py", "w") as f:
-    f.write("from .issuer import Issuer\nclass CreditCardIssuer(Issuer):\n    pass") m
-with open("issuers/paypal/__init__.py", "w") as f:
-    f.write("from .paypal import PaypalIssuer\nPaypalIssuer()")
-with open("issuers/paypal/paypal.py", "w") as f:
-    f.write("from .issuer import Issuer\nclass PaypalIssuer(Issuer):\n    pass")
-with open("issuers/stripe/__init__.py", "w") as f:
-    f.write("from .stripe import StripeIssuer\nStripeIssuer()")
-with open("issuers/stripe/stripe.py", "w") as f:
-    f.write("from .issuer import Issuer\nclass StripeIssuer(Issuer):\n    pass")
-# Service folders
-service_folders = ["services/credit_card", "services/paypal", "services/stripe"]
-for service_folder in service_folders:
-    os.makedirs(service_folder)
-    Path(f"{service_folder}/__init__.py").touch()
-# Service files
-with open("services/credit_card/__init__.py", "w") as f:
-    f.write("from .credit_card import CreditCardService\nCreditCardService()")
-with open("services/credit_card/credit_card.py", "w") as f:
-    f.write("from .service import Service\nclass CreditCardService(Service):\n    pass") 
-with open("services/paypal/__init__.py", "w") as f:
-    f.write("from .paypal import PaypalService\nPaypalService()")
-with open("services/paypal/paypal.py", "w") as f:
-    f.write("from .service import Service\nclass PaypalService(Service):\n    pass")
-with open("services/stripe/__init__.py", "w") as f:
-    f.write("from .stripe import StripeService\nStripeService()")
-with open("services/stripe/stripe.py", "w") as f:
-    f.write("from .service import Service\nclass StripeService(Service):\n    pass" )
+# Define service subfolders and create __init__.py files
+service_folders = ["credit_card", "paypal", "stripe"]
+for service in service_folders:
+    folder_path = f"services/{service}"
+    os.makedirs(folder_path, exist_ok=True)
+    with open(f"{folder_path}/__init__.py", "w") as f:
+        f.write(f"from .{service} import {service.capitalize()}Service\n{service.capitalize()}Service()")
+    with open(f"{folder_path}/{service}.py", "w") as f:
+        f.write(f"from .service import Service\nclass {service.capitalize()}Service(Service):\n    pass")
 
-
+# Create configs and test files
 with open("configs/settings.py", "w") as f:
     f.write("DEBUG=True")  
 
 with open("tests/test_transactions.py", "w") as f:
-    f.write("import unittest \n\nclass TestTransactions(unittest.TestCase):\n   pass")
+    f.write("import unittest\n\nclass TestTransactions(unittest.TestCase):\n    pass")
+    
+with open(".gitignore", "w") as f:
+    f.write("\n".join([
+        "__pycache__/",
+        "*.py[cod]",
+        "venv/",
+        "env/",
+        ".env",
+        "*.log",
+        "*.sqlite3"
+    ]))
