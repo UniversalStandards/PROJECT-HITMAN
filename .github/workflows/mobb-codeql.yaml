@@ -26,9 +26,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: ["java-kotlin"]
+        language: ["python"]
         # CodeQL supports [ 'c-cpp', 'csharp', 'go', 'java-kotlin', 'javascript-typescript', 'python', 'ruby', 'swift' ]
-        codeql_output_filename: ["java.sarif"]
+        codeql_output_filename: ["python.sarif"]
 
     steps:
       - name: Checkout repository
