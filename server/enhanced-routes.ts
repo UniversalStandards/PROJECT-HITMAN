@@ -170,6 +170,363 @@ export function registerEnhancedRoutes(app: Express) {
     }
   });
 
+  // ========== CARD MANAGEMENT ROUTES ==========
+  
+  // Get all issued cards (admin)
+  app.get("/api/cards", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await enhancedStorage.getUser(userId);
+      
+      if ((user as any)?.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      const cards = await enhancedStorage.getIssuedCards(user.organizationId);
+      res.json(cards || []);
+    } catch (error) {
+      console.error("Cards fetch error:", error);
+      res.status(500).json({ message: "Failed to fetch cards" });
+    }
+  });
+  
+  // Issue new card
+  app.post("/api/cards/issue", isAuthenticated, async (req: any, res) => {
+    try {
+      const { holderName, employeeId, cardType, spendingLimit, limitPeriod, department } = req.body;
+      const userId = req.user.claims.sub;
+      const user = await enhancedStorage.getUser(userId);
+      
+      if ((user as any)?.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      // Issue card through Stripe provider
+      const provider = serviceRegistry.getService(user.organizationId, 'payment', 'stripe');
+      if (provider && provider.issueCard) {
+        const limits = { [limitPeriod]: spendingLimit };
+        const cardResult = await provider.issueCard(holderName, cardType, limits);
+        
+        if (cardResult.success) {
+          // Store card in database
+          await enhancedStorage.saveIssuedCard({
+            id: cardResult.cardId,
+            organizationId: user.organizationId,
+            holderName,
+            employeeId,
+            cardType,
+            cardNumber: cardResult.cardNumber,
+            expiryDate: cardResult.expiryDate,
+            status: cardResult.status || 'active',
+            spendingLimit,
+            limitPeriod,
+            department,
+            issuedAt: new Date(),
+            currentSpend: 0,
+          });
+          
+          res.json(cardResult);
+        } else {
+          res.status(400).json({ message: cardResult.error });
+        }
+      } else {
+        res.status(400).json({ message: "Card issuance not available" });
+      }
+    } catch (error) {
+      console.error("Card issuance error:", error);
+      res.status(500).json({ message: "Failed to issue card" });
+    }
+  });
+  
+  // Freeze/Unfreeze card
+  app.patch("/api/cards/:cardId/:action", isAuthenticated, async (req: any, res) => {
+    try {
+      const { cardId, action } = req.params;
+      const userId = req.user.claims.sub;
+      const user = await enhancedStorage.getUser(userId);
+      
+      if ((user as any)?.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      if (action !== 'freeze' && action !== 'unfreeze') {
+        return res.status(400).json({ message: "Invalid action" });
+      }
+      
+      // Update card status
+      await enhancedStorage.updateCardStatus(cardId, action === 'freeze' ? 'frozen' : 'active');
+      res.json({ success: true, message: `Card ${action}d successfully` });
+    } catch (error) {
+      console.error("Card status update error:", error);
+      res.status(500).json({ message: "Failed to update card status" });
+    }
+  });
+
+  // ========== DIRECT DEPOSIT ROUTES ==========
+  
+  // Get direct deposit transfers
+  app.get("/api/direct-deposits", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await enhancedStorage.getUser(userId);
+      
+      if ((user as any)?.role === 'admin') {
+        const transfers = await enhancedStorage.getACHTransfers(user.organizationId);
+        res.json(transfers || []);
+      } else {
+        // Employee sees only their deposits
+        const transfers = await enhancedStorage.getEmployeeDeposits(userId);
+        res.json(transfers || []);
+      }
+    } catch (error) {
+      console.error("Direct deposits fetch error:", error);
+      res.status(500).json({ message: "Failed to fetch direct deposits" });
+    }
+  });
+  
+  // Process ACH transfer
+  app.post("/api/direct-deposits/transfer", isAuthenticated, async (req: any, res) => {
+    try {
+      const transferData = req.body;
+      const userId = req.user.claims.sub;
+      const user = await enhancedStorage.getUser(userId);
+      
+      if ((user as any)?.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      // Process through provider
+      const provider = serviceRegistry.getService(user.organizationId, 'payment', 'stripe');
+      if (provider && provider.processACH) {
+        const result = await provider.processACH(
+          transferData.amount,
+          'main-account', // From account
+          transferData.recipientAccount,
+          transferData.transferSpeed
+        );
+        
+        if (result.success) {
+          // Store transfer record
+          await enhancedStorage.saveACHTransfer({
+            ...transferData,
+            organizationId: user.organizationId,
+            transferId: result.transferId,
+            status: result.status,
+            estimatedSettlement: result.estimatedSettlement,
+            fees: result.fees,
+            createdAt: new Date(),
+          });
+          
+          res.json(result);
+        } else {
+          res.status(400).json({ message: result.error });
+        }
+      } else {
+        res.status(400).json({ message: "ACH transfers not available" });
+      }
+    } catch (error) {
+      console.error("ACH transfer error:", error);
+      res.status(500).json({ message: "Failed to process ACH transfer" });
+    }
+  });
+  
+  // Employee direct deposit enrollment
+  app.get("/api/direct-deposit/enrollment", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const employee = await employeeVerificationService.getEmployeeByUserId(userId);
+      
+      if (!employee) {
+        return res.json({ isEnrolled: false });
+      }
+      
+      const enrollment = await enhancedStorage.getDirectDepositEnrollment(employee.id);
+      res.json(enrollment || { isEnrolled: false });
+    } catch (error) {
+      console.error("Enrollment fetch error:", error);
+      res.status(500).json({ message: "Failed to fetch enrollment status" });
+    }
+  });
+  
+  // Enroll in direct deposit
+  app.post("/api/direct-deposit/enroll", isAuthenticated, async (req: any, res) => {
+    try {
+      const enrollmentData = req.body;
+      const userId = req.user.claims.sub;
+      const employee = await employeeVerificationService.getEmployeeByUserId(userId);
+      
+      if (!employee) {
+        return res.status(400).json({ message: "Employee verification required" });
+      }
+      
+      // Save enrollment
+      await enhancedStorage.saveDirectDepositEnrollment({
+        employeeId: employee.id,
+        ...enrollmentData,
+        isEnrolled: true,
+        enrolledAt: new Date(),
+        last4: enrollmentData.accountNumber.slice(-4),
+      });
+      
+      res.json({ success: true, message: "Direct deposit enrollment successful" });
+    } catch (error) {
+      console.error("Enrollment error:", error);
+      res.status(500).json({ message: "Failed to enroll in direct deposit" });
+    }
+  });
+
+  // ========== PAYMENT HUB ROUTES ==========
+  
+  // Get payment providers status
+  app.get("/api/payment-providers", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await enhancedStorage.getUser(userId);
+      
+      const providers = [
+        { name: 'stripe', status: 'active', methods: ['ach', 'wire', 'card'] },
+        { name: 'paypal', status: 'active', methods: ['instant', 'card'] },
+        { name: 'dwolla', status: 'active', methods: ['ach'] },
+        { name: 'wise', status: 'inactive', methods: ['wire', 'international'] },
+        { name: 'square', status: 'inactive', methods: ['card', 'ach'] },
+      ];
+      
+      res.json(providers);
+    } catch (error) {
+      console.error("Providers fetch error:", error);
+      res.status(500).json({ message: "Failed to fetch providers" });
+    }
+  });
+  
+  // Get all payments
+  app.get("/api/payments/all", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await enhancedStorage.getUser(userId);
+      
+      if ((user as any)?.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      const payments = await enhancedStorage.getPayments(user.organizationId);
+      res.json(payments || []);
+    } catch (error) {
+      console.error("Payments fetch error:", error);
+      res.status(500).json({ message: "Failed to fetch payments" });
+    }
+  });
+  
+  // Process unified payment
+  app.post("/api/payments/process", isAuthenticated, async (req: any, res) => {
+    try {
+      const paymentData = req.body;
+      const userId = req.user.claims.sub;
+      const user = await enhancedStorage.getUser(userId);
+      
+      if ((user as any)?.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      // Process through selected provider
+      const provider = serviceRegistry.getService(
+        user.organizationId, 
+        'payment', 
+        paymentData.provider
+      );
+      
+      if (!provider) {
+        return res.status(400).json({ message: "Payment provider not available" });
+      }
+      
+      let result;
+      
+      // Route to appropriate payment method
+      if (paymentData.paymentMethod === 'ach') {
+        result = await provider.processACH?.(
+          paymentData.amount,
+          'main-account',
+          paymentData.recipientAccount,
+          'standard'
+        );
+      } else if (paymentData.paymentMethod === 'wire') {
+        result = await provider.processWire?.(
+          paymentData.amount,
+          'main-account',
+          paymentData.recipientAccount,
+          paymentData.currency === 'USD' ? 'domestic' : 'international'
+        );
+      } else {
+        result = await provider.processPayment?.(
+          paymentData.amount,
+          paymentData.currency,
+          paymentData
+        );
+      }
+      
+      if (result?.success) {
+        // Store payment record
+        await enhancedStorage.savePayment({
+          ...paymentData,
+          organizationId: user.organizationId,
+          transactionId: result.transactionId,
+          status: 'completed',
+          createdAt: new Date(),
+        });
+        
+        res.json(result);
+      } else {
+        res.status(400).json({ message: result?.error || "Payment failed" });
+      }
+    } catch (error) {
+      console.error("Payment processing error:", error);
+      res.status(500).json({ message: "Failed to process payment" });
+    }
+  });
+  
+  // Schedule payment
+  app.post("/api/payments/schedule", isAuthenticated, async (req: any, res) => {
+    try {
+      const scheduleData = req.body;
+      const userId = req.user.claims.sub;
+      const user = await enhancedStorage.getUser(userId);
+      
+      if ((user as any)?.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      // Save scheduled payment
+      await enhancedStorage.saveScheduledPayment({
+        ...scheduleData,
+        organizationId: user.organizationId,
+        status: 'scheduled',
+        createdAt: new Date(),
+      });
+      
+      res.json({ success: true, message: "Payment scheduled successfully" });
+    } catch (error) {
+      console.error("Schedule payment error:", error);
+      res.status(500).json({ message: "Failed to schedule payment" });
+    }
+  });
+  
+  // Get scheduled payments
+  app.get("/api/payments/scheduled", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await enhancedStorage.getUser(userId);
+      
+      if ((user as any)?.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      const scheduled = await enhancedStorage.getScheduledPayments(user.organizationId);
+      res.json(scheduled || []);
+    } catch (error) {
+      console.error("Scheduled payments fetch error:", error);
+      res.status(500).json({ message: "Failed to fetch scheduled payments" });
+    }
+  });
+
   // ========== EMPLOYEE ROUTES ==========
   
   // Check if user is verified employee

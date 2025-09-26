@@ -25,6 +25,9 @@ import FAQ from "@/pages/faq";
 import News from "@/pages/news";
 import Careers from "@/pages/careers";
 import RoleSelector from "@/pages/role-selector";
+import CardManagement from "@/pages/card-management";
+import DirectDeposits from "@/pages/direct-deposits";
+import PaymentHub from "@/pages/payment-hub";
 
 function Router() {
   const { isAuthenticated, isLoading, user } = useAuth();
@@ -72,6 +75,8 @@ function Router() {
           <Route path="/" component={EmployeeDashboard} />
           <Route path="/employee" component={EmployeeDashboard} />
           <Route path="/expenses" component={Expenses} />
+          <Route path="/direct-deposit" component={DirectDeposits} />
+          <Route path="/reports" component={Reports} />
         </>
       ) : null}
       
@@ -83,6 +88,9 @@ function Router() {
           <Route path="/admin" component={AdminDashboard} />
           <Route path="/wallets" component={Wallets} />
           <Route path="/payments" component={Payments} />
+          <Route path="/payment-hub" component={PaymentHub} />
+          <Route path="/cards" component={CardManagement} />
+          <Route path="/direct-deposits" component={DirectDeposits} />
           <Route path="/budgets" component={Budgets} />
           <Route path="/expenses" component={Expenses} />
           <Route path="/vendors" component={Vendors} />
@@ -99,21 +107,7 @@ function Router() {
         </>
       ) : null}
       
-      {/* Default Landing for unauthenticated */}
-      {!isAuthenticated && (
-        <>
-          <Route path="/" component={RoleSelector} />
-          <Route path="/services" component={PublicServices} />
-          <Route path="/landing" component={Landing} />
-          <Route path="/services-directory" component={ServicesDirectory} />
-          <Route path="/about" component={About} />
-          <Route path="/contact" component={Contact} />
-          <Route path="/faq" component={FAQ} />
-          <Route path="/news" component={News} />
-          <Route path="/careers" component={Careers} />
-          <Route path="/role-select" component={RoleSelector} />
-        </>
-      )}
+      {/* Default Landing for unauthenticated - Removed duplicate logic */}
       
       <Route component={NotFound} />
     </Switch>
