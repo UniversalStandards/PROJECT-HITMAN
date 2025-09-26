@@ -10,9 +10,11 @@ updates:
     target-branch: "develop"
     assignees:
       - "frontend-team"
+      - "*"
     labels:
       - "frontend"
       - "dependencies"
+      - "*"
 
   - package-ecosystem: "pip"
     directory: "/backend"
@@ -23,6 +25,7 @@ updates:
     open-pull-requests-limit: 5
     reviewers:
       - "backend-team"
+      - "*"
     labels:
       - "backend"
       - "dependencies"
@@ -51,7 +54,7 @@ updates:
 
   - package-ecosystem: "terraform"
     directory: "/infrastructure"
-    schedule: 
+    schedule:
       interval: "weekly"
       day: "tuesday"
       time: "14:00"
@@ -59,5 +62,11 @@ updates:
     assignees:
       - "infrastructure-team"
     labels:
-      - "infrastructure"
       - "terraform"
+      - "infrastructure"
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+  status: write
