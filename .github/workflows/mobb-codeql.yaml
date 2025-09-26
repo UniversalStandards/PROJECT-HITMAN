@@ -3,7 +3,7 @@
 # This example utilizes CodeQL with JavaScript. For other languages, change the CodeQL language settings below.
 #
 # Secrets in use:
-# MOBB_API_TOKEN - your mobb user credentials (autumatially set if you forked this repo via the Mobb app)
+# MOBB_API_TOKEN - your mobb user credentials (automatically set if you forked this repo via the Mobb app)
 # GITHUB_TOKEN - automatically set by GitHub
 
 name: "Mobb/CodeQL"
