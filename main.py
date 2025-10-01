@@ -1,27 +1,10 @@
 import os
-from flask import Flask
-
-# Try to import settings, fallback to default if not available
-try:
-    from configs.settings import DEBUG
-except ImportError:
-    DEBUG = True
-
-app = Flask(__name__)
-app.config['DEBUG'] = DEBUG
-
-@app.route('/')
-def home():
-    return 'Welcome to the Payment Processor App!'
-
-if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='127.0.0.1', port=port, debug=DEBUG)
 import logging
 from flask import (
     Flask,
     request,
     jsonify,
+    render_template,
 )
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
@@ -33,7 +16,7 @@ logging.basicConfig(level=logging.INFO)
 try:
     from configs.settings import DEBUG, SECRET_KEY, DATABASE_URI
 except ImportError:
-    # Fallback if configs module is not available - compatible with main branch
+    # Fallback if configs module is not available
     DEBUG = os.environ.get("FLASK_DEBUG", "True").lower() in ("true", "1", "yes", "on")
     SECRET_KEY = os.environ.get("SECRET_KEY", "dev-key-change-in-production")
     DATABASE_URI = os.environ.get("DATABASE_URL", "sqlite:///gofap.db")
@@ -49,12 +32,11 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
-# Import models after db initialization - compatible with main branch models import pattern
+# Import models after db initialization
 try:
     from models import User, Account, Transaction, Department, Budget
 except ImportError:
     # Models module not yet created - this is expected during initial setup
-    # Try alternative import pattern from main branch
     try:
         from models import *
     except ImportError:
@@ -64,29 +46,37 @@ except ImportError:
 @app.route("/")
 def home():
     """Home page route for the GOFAP Payment Processor."""
-    return render_template("index.html")
-    return "Welcome to the Government Operations and Financial Accounting Platform (GOFAP)!"
+    try:
+        return render_template("index.html")
+    except:
+        return "Welcome to the Government Operations and Financial Accounting Platform (GOFAP)!"
 
 
 @app.route("/dashboard")
 def dashboard():
     """Dashboard page showing system overview."""
-    return render_template("dashboard.html")
-    return jsonify({"message": "GOFAP Dashboard - System Overview"})
+    try:
+        return render_template("dashboard.html")
+    except:
+        return jsonify({"message": "GOFAP Dashboard - System Overview"})
 
 
 @app.route("/accounts")
 def accounts():
     """Accounts management page."""
-    return render_template("accounts.html")
-    return jsonify({"message": "GOFAP Account Management"})
+    try:
+        return render_template("accounts.html")
+    except:
+        return jsonify({"message": "GOFAP Account Management"})
 
 
 @app.route("/accounts/create")
 def create_account():
     """Account creation page."""
-    return render_template("create_account.html")
-    return jsonify({"message": "GOFAP Account Creation"})
+    try:
+        return render_template("create_account.html")
+    except:
+        return jsonify({"message": "GOFAP Account Creation"})
 
 
 @app.route("/api/accounts/create", methods=["POST"])
@@ -103,7 +93,6 @@ def api_create_account():
 
         # Here you would integrate with the actual service APIs
         # For now, return a success response
-
         return jsonify(
             {
                 "success": True,
@@ -112,9 +101,6 @@ def api_create_account():
             }
         )
 
-    except Exception as e:
-        logging.exception("Exception occurred while creating account")
-        return jsonify({"error": "An internal error occurred. Please try again later."}), 500
     except Exception:
         logging.exception("Exception occurred while creating account")
         return (
@@ -126,22 +112,28 @@ def api_create_account():
 @app.route("/transactions")
 def transactions():
     """Transactions page."""
-    return render_template("transactions.html")
-    return jsonify({"message": "GOFAP Transaction Management"})
+    try:
+        return render_template("transactions.html")
+    except:
+        return jsonify({"message": "GOFAP Transaction Management"})
 
 
 @app.route("/budgets")
 def budgets():
     """Budgets page."""
-    return render_template("budgets.html")
-    return jsonify({"message": "GOFAP Budget Management"})
+    try:
+        return render_template("budgets.html")
+    except:
+        return jsonify({"message": "GOFAP Budget Management"})
 
 
 @app.route("/reports")
 def reports():
     """Reports and analytics page."""
-    return render_template("reports.html")
-    return jsonify({"message": "GOFAP Reports and Analytics"})
+    try:
+        return render_template("reports.html")
+    except:
+        return jsonify({"message": "GOFAP Reports and Analytics"})
 
 
 if __name__ == "__main__":
