@@ -28,6 +28,7 @@ import RoleSelector from "@/pages/role-selector";
 import CardManagement from "@/pages/card-management";
 import DirectDeposits from "@/pages/direct-deposits";
 import PaymentHub from "@/pages/payment-hub";
+import EmployeeCards from "@/pages/employee-cards";
 
 function Router() {
   const { isAuthenticated, isLoading, user } = useAuth();
@@ -76,6 +77,7 @@ function Router() {
           <Route path="/employee" component={EmployeeDashboard} />
           <Route path="/expenses" component={Expenses} />
           <Route path="/direct-deposit" component={DirectDeposits} />
+          <Route path="/cards" component={EmployeeCards} />
           <Route path="/reports" component={Reports} />
         </>
       ) : null}
