@@ -24,7 +24,387 @@ import {
 export function registerEnhancedRoutes(app: Express) {
   // ========== BULK OPERATIONS ROUTES ==========
   app.use('/api', bulkOperationsRouter);
+
+  // ========== EMPLOYEE CARD MANAGEMENT ROUTES ==========
   
+  // Get employee's own cards
+  app.get("/api/employee/cards", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      // Fetch cards issued to this employee
+      const cards = await enhancedStorage.getIssuedCards();
+      const employeeCards = cards.filter((card: any) => 
+        card.employeeId === userId || card.holderName === req.user?.name
+      );
+      
+      res.json(employeeCards);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch cards" });
+    }
+  });
+
+  // Get employee spending summary
+  app.get("/api/employee/spending-summary", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      
+      // Calculate spending summary (mock data for now)
+      const summary = {
+        currentMonth: "2,450.00",
+        monthlyLimit: "5,000.00",
+        available: "2,550.00",
+        pending: "125.50"
+      };
+      
+      res.json(summary);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch spending summary" });
+    }
+  });
+
+  // Employee freeze/unfreeze their own card
+  app.patch("/api/employee/cards/:cardId/:action", isAuthenticated, async (req: any, res) => {
+    try {
+      const { cardId, action } = req.params;
+      const userId = req.user?.id;
+      
+      // Verify card belongs to employee
+      const cards = await enhancedStorage.getIssuedCards();
+      const card = cards.find((c: any) => c.id === cardId);
+      
+      if (!card || (card.employeeId !== userId && card.holderName !== req.user?.name)) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      // Update card status
+      await enhancedStorage.updateIssuedCard(cardId, {
+        status: action === 'freeze' ? 'frozen' : 'active',
+        modifiedBy: userId,
+        modifiedAt: new Date().toISOString()
+      });
+      
+      res.json({ success: true, status: action === 'freeze' ? 'frozen' : 'active' });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update card status" });
+    }
+  });
+
+  // Set card PIN
+  app.post("/api/employee/cards/:cardId/pin", isAuthenticated, async (req: any, res) => {
+    try {
+      const { cardId } = req.params;
+      const { pin } = req.body;
+      const userId = req.user?.id;
+      
+      // Validate PIN format
+      if (!pin || !/^\d{4}$/.test(pin)) {
+        return res.status(400).json({ message: "Invalid PIN format" });
+      }
+      
+      // Verify card belongs to employee
+      const cards = await enhancedStorage.getIssuedCards();
+      const card = cards.find((c: any) => c.id === cardId);
+      
+      if (!card || (card.employeeId !== userId && card.holderName !== req.user?.name)) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      // Store encrypted PIN (in production, use proper encryption)
+      await enhancedStorage.updateIssuedCard(cardId, {
+        pinSet: true,
+        pinLastUpdated: new Date().toISOString()
+      });
+      
+      res.json({ success: true, message: "PIN set successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to set PIN" });
+    }
+  });
+
+  // Report card lost/stolen
+  app.post("/api/employee/cards/:cardId/report", isAuthenticated, async (req: any, res) => {
+    try {
+      const { cardId } = req.params;
+      const { reason } = req.body;
+      const userId = req.user?.id;
+      
+      // Verify card belongs to employee
+      const cards = await enhancedStorage.getIssuedCards();
+      const card = cards.find((c: any) => c.id === cardId);
+      
+      if (!card || (card.employeeId !== userId && card.holderName !== req.user?.name)) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      // Permanently deactivate card
+      await enhancedStorage.updateIssuedCard(cardId, {
+        status: 'cancelled',
+        cancellationReason: reason,
+        cancelledAt: new Date().toISOString(),
+        cancelledBy: userId
+      });
+      
+      // Create audit log
+      await enhancedStorage.createAuditLog({
+        organizationId: card.organizationId || 'default',
+        userId: userId,
+        action: 'card_reported',
+        entityType: 'card',
+        entityId: cardId,
+        details: JSON.stringify({ reason, cardNumber: card.lastFour }),
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent') || '',
+        metadata: {}
+      });
+      
+      res.json({ success: true, message: "Card reported and deactivated" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to report card" });
+    }
+  });
+  
+  // ========== ACH APPROVAL WORKFLOWS ==========
+  
+  // Create ACH transfer with approval requirement
+  app.post("/api/ach/transfers/create", isAuthenticated, async (req: any, res) => {
+    try {
+      const { amount, recipientAccount, routingNumber, transferType, description } = req.body;
+      const userId = req.user?.id;
+      
+      // Determine if approval needed based on amount
+      const requiresApproval = parseFloat(amount) > 10000; // Amounts over $10,000 need approval
+      
+      const transfer = {
+        id: `ach_${Date.now()}`,
+        initiatedBy: userId,
+        amount,
+        recipientAccount,
+        routingNumber, 
+        transferType,
+        description,
+        status: requiresApproval ? 'pending_approval' : 'approved',
+        requiresApproval,
+        approvalLevel: parseFloat(amount) > 50000 ? 2 : 1, // 2-level approval for amounts > $50k
+        createdAt: new Date().toISOString(),
+        approvals: []
+      };
+      
+      // Store transfer (would use database in production)
+      await enhancedStorage.createEnhancedTransaction({
+        organizationId: req.user?.organizationId || 'default',
+        type: 'ach_transfer',
+        amount: amount.toString(),
+        currency: 'USD',
+        status: transfer.status,
+        method: 'ach',
+        description,
+        metadata: transfer
+      });
+      
+      res.json({ 
+        success: true, 
+        transfer,
+        message: requiresApproval ? 
+          `Transfer requires approval (Amount: $${amount})` : 
+          'Transfer approved and queued for processing'
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to create ACH transfer" });
+    }
+  });
+
+  // Get pending approvals
+  app.get("/api/ach/approvals/pending", isAuthenticated, async (req: any, res) => {
+    try {
+      const userRole = (req.user as any)?.role;
+      
+      if (userRole !== 'admin' && userRole !== 'manager') {
+        return res.status(403).json({ message: "Insufficient permissions" });
+      }
+      
+      // Fetch pending ACH transfers
+      const transactions = await enhancedStorage.getEnhancedTransactions();
+      const pendingApprovals = transactions.filter((t: any) => 
+        t.type === 'ach_transfer' && 
+        (t.status === 'pending_approval' || t.status === 'pending_second_approval')
+      );
+      
+      res.json(pendingApprovals);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch pending approvals" });
+    }
+  });
+
+  // Approve/Reject ACH transfer
+  app.post("/api/ach/approvals/:transferId", isAuthenticated, async (req: any, res) => {
+    try {
+      const { transferId } = req.params;
+      const { action, comments } = req.body;
+      const userId = req.user?.id;
+      const userRole = (req.user as any)?.role;
+      
+      if (userRole !== 'admin' && userRole !== 'manager') {
+        return res.status(403).json({ message: "Insufficient permissions to approve transfers" });
+      }
+      
+      // Get transfer details
+      const transactions = await enhancedStorage.getEnhancedTransactions();
+      const transfer = transactions.find((t: any) => t.id === transferId);
+      
+      if (!transfer) {
+        return res.status(404).json({ message: "Transfer not found" });
+      }
+      
+      const metadata = transfer.metadata as any;
+      
+      // Check approval level requirements
+      if (metadata.approvalLevel === 2 && transfer.status === 'pending_approval') {
+        // First level approval for 2-level requirement
+        if (action === 'approve') {
+          metadata.approvals.push({
+            approvedBy: userId,
+            approvedAt: new Date().toISOString(),
+            level: 1,
+            comments
+          });
+          
+          await enhancedStorage.updateEnhancedTransaction(transferId, {
+            status: 'pending_second_approval',
+            metadata
+          });
+          
+          res.json({ 
+            success: true, 
+            message: "First level approval granted. Awaiting second level approval." 
+          });
+        } else {
+          await enhancedStorage.updateEnhancedTransaction(transferId, {
+            status: 'rejected',
+            metadata: {
+              ...metadata,
+              rejectedBy: userId,
+              rejectedAt: new Date().toISOString(),
+              rejectionReason: comments
+            }
+          });
+          
+          res.json({ success: true, message: "Transfer rejected" });
+        }
+      } else {
+        // Final approval
+        if (action === 'approve') {
+          metadata.approvals.push({
+            approvedBy: userId,
+            approvedAt: new Date().toISOString(),
+            level: metadata.approvalLevel === 2 ? 2 : 1,
+            comments
+          });
+          
+          // Process the ACH transfer
+          const provider = serviceRegistry.getService(
+            transfer.organizationId,
+            'banking',
+            'dwolla'
+          );
+          
+          if (provider && provider.processACH) {
+            const result = await provider.processACH(
+              parseFloat(transfer.amount),
+              'default_account',
+              metadata.recipientAccount,
+              'standard'
+            );
+            
+            await enhancedStorage.updateEnhancedTransaction(transferId, {
+              status: result.success ? 'completed' : 'failed',
+              providerTransactionId: result.providerTransactionId,
+              metadata: {
+                ...metadata,
+                processedAt: new Date().toISOString(),
+                processingResult: result
+              }
+            });
+            
+            res.json({ 
+              success: true, 
+              message: result.success ? 
+                "Transfer approved and processed successfully" : 
+                "Transfer approved but processing failed",
+              result
+            });
+          } else {
+            await enhancedStorage.updateEnhancedTransaction(transferId, {
+              status: 'approved',
+              metadata
+            });
+            
+            res.json({ 
+              success: true, 
+              message: "Transfer approved and queued for processing" 
+            });
+          }
+        } else {
+          await enhancedStorage.updateEnhancedTransaction(transferId, {
+            status: 'rejected',
+            metadata: {
+              ...metadata,
+              rejectedBy: userId,
+              rejectedAt: new Date().toISOString(),
+              rejectionReason: comments
+            }
+          });
+          
+          res.json({ success: true, message: "Transfer rejected" });
+        }
+      }
+      
+      // Create audit log
+      await enhancedStorage.createAuditLog({
+        organizationId: transfer.organizationId,
+        userId,
+        action: `ach_transfer_${action}`,
+        entityType: 'ach_transfer',
+        entityId: transferId,
+        details: JSON.stringify({ amount: transfer.amount, action, comments }),
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent') || '',
+        metadata: {}
+      });
+      
+    } catch (error) {
+      console.error("ACH approval error:", error);
+      res.status(500).json({ message: "Failed to process approval" });
+    }
+  });
+
+  // Get ACH transfer status
+  app.get("/api/ach/transfers/:transferId/status", isAuthenticated, async (req: any, res) => {
+    try {
+      const { transferId } = req.params;
+      
+      const transactions = await enhancedStorage.getEnhancedTransactions();
+      const transfer = transactions.find((t: any) => t.id === transferId);
+      
+      if (!transfer) {
+        return res.status(404).json({ message: "Transfer not found" });
+      }
+      
+      res.json({
+        id: transfer.id,
+        status: transfer.status,
+        amount: transfer.amount,
+        createdAt: transfer.createdAt,
+        metadata: transfer.metadata
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch transfer status" });
+    }
+  });
+
   // ========== CITIZEN ROUTES ==========
   
   // Public services listing
@@ -167,6 +547,363 @@ export function registerEnhancedRoutes(app: Express) {
     } catch (error) {
       console.error("Bid submission error:", error);
       res.status(500).json({ message: "Bid submission failed" });
+    }
+  });
+
+  // ========== CARD MANAGEMENT ROUTES ==========
+  
+  // Get all issued cards (admin)
+  app.get("/api/cards", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await enhancedStorage.getUser(userId);
+      
+      if ((user as any)?.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      const cards = await enhancedStorage.getIssuedCards(user.organizationId);
+      res.json(cards || []);
+    } catch (error) {
+      console.error("Cards fetch error:", error);
+      res.status(500).json({ message: "Failed to fetch cards" });
+    }
+  });
+  
+  // Issue new card
+  app.post("/api/cards/issue", isAuthenticated, async (req: any, res) => {
+    try {
+      const { holderName, employeeId, cardType, spendingLimit, limitPeriod, department } = req.body;
+      const userId = req.user.claims.sub;
+      const user = await enhancedStorage.getUser(userId);
+      
+      if ((user as any)?.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      // Issue card through Stripe provider
+      const provider = serviceRegistry.getService(user.organizationId, 'payment', 'stripe');
+      if (provider && provider.issueCard) {
+        const limits = { [limitPeriod]: spendingLimit };
+        const cardResult = await provider.issueCard(holderName, cardType, limits);
+        
+        if (cardResult.success) {
+          // Store card in database
+          await enhancedStorage.saveIssuedCard({
+            id: cardResult.cardId,
+            organizationId: user.organizationId,
+            holderName,
+            employeeId,
+            cardType,
+            cardNumber: cardResult.cardNumber,
+            expiryDate: cardResult.expiryDate,
+            status: cardResult.status || 'active',
+            spendingLimit,
+            limitPeriod,
+            department,
+            issuedAt: new Date(),
+            currentSpend: 0,
+          });
+          
+          res.json(cardResult);
+        } else {
+          res.status(400).json({ message: cardResult.error });
+        }
+      } else {
+        res.status(400).json({ message: "Card issuance not available" });
+      }
+    } catch (error) {
+      console.error("Card issuance error:", error);
+      res.status(500).json({ message: "Failed to issue card" });
+    }
+  });
+  
+  // Freeze/Unfreeze card
+  app.patch("/api/cards/:cardId/:action", isAuthenticated, async (req: any, res) => {
+    try {
+      const { cardId, action } = req.params;
+      const userId = req.user.claims.sub;
+      const user = await enhancedStorage.getUser(userId);
+      
+      if ((user as any)?.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      if (action !== 'freeze' && action !== 'unfreeze') {
+        return res.status(400).json({ message: "Invalid action" });
+      }
+      
+      // Update card status
+      await enhancedStorage.updateCardStatus(cardId, action === 'freeze' ? 'frozen' : 'active');
+      res.json({ success: true, message: `Card ${action}d successfully` });
+    } catch (error) {
+      console.error("Card status update error:", error);
+      res.status(500).json({ message: "Failed to update card status" });
+    }
+  });
+
+  // ========== DIRECT DEPOSIT ROUTES ==========
+  
+  // Get direct deposit transfers
+  app.get("/api/direct-deposits", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await enhancedStorage.getUser(userId);
+      
+      if ((user as any)?.role === 'admin') {
+        const transfers = await enhancedStorage.getACHTransfers(user.organizationId);
+        res.json(transfers || []);
+      } else {
+        // Employee sees only their deposits
+        const transfers = await enhancedStorage.getEmployeeDeposits(userId);
+        res.json(transfers || []);
+      }
+    } catch (error) {
+      console.error("Direct deposits fetch error:", error);
+      res.status(500).json({ message: "Failed to fetch direct deposits" });
+    }
+  });
+  
+  // Process ACH transfer
+  app.post("/api/direct-deposits/transfer", isAuthenticated, async (req: any, res) => {
+    try {
+      const transferData = req.body;
+      const userId = req.user.claims.sub;
+      const user = await enhancedStorage.getUser(userId);
+      
+      if ((user as any)?.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      // Process through provider
+      const provider = serviceRegistry.getService(user.organizationId, 'payment', 'stripe');
+      if (provider && provider.processACH) {
+        const result = await provider.processACH(
+          transferData.amount,
+          'main-account', // From account
+          transferData.recipientAccount,
+          transferData.transferSpeed
+        );
+        
+        if (result.success) {
+          // Store transfer record
+          await enhancedStorage.saveACHTransfer({
+            ...transferData,
+            organizationId: user.organizationId,
+            transferId: result.transferId,
+            status: result.status,
+            estimatedSettlement: result.estimatedSettlement,
+            fees: result.fees,
+            createdAt: new Date(),
+          });
+          
+          res.json(result);
+        } else {
+          res.status(400).json({ message: result.error });
+        }
+      } else {
+        res.status(400).json({ message: "ACH transfers not available" });
+      }
+    } catch (error) {
+      console.error("ACH transfer error:", error);
+      res.status(500).json({ message: "Failed to process ACH transfer" });
+    }
+  });
+  
+  // Employee direct deposit enrollment
+  app.get("/api/direct-deposit/enrollment", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const employee = await employeeVerificationService.getEmployeeByUserId(userId);
+      
+      if (!employee) {
+        return res.json({ isEnrolled: false });
+      }
+      
+      const enrollment = await enhancedStorage.getDirectDepositEnrollment(employee.id);
+      res.json(enrollment || { isEnrolled: false });
+    } catch (error) {
+      console.error("Enrollment fetch error:", error);
+      res.status(500).json({ message: "Failed to fetch enrollment status" });
+    }
+  });
+  
+  // Enroll in direct deposit
+  app.post("/api/direct-deposit/enroll", isAuthenticated, async (req: any, res) => {
+    try {
+      const enrollmentData = req.body;
+      const userId = req.user.claims.sub;
+      const employee = await employeeVerificationService.getEmployeeByUserId(userId);
+      
+      if (!employee) {
+        return res.status(400).json({ message: "Employee verification required" });
+      }
+      
+      // Save enrollment
+      await enhancedStorage.saveDirectDepositEnrollment({
+        employeeId: employee.id,
+        ...enrollmentData,
+        isEnrolled: true,
+        enrolledAt: new Date(),
+        last4: enrollmentData.accountNumber.slice(-4),
+      });
+      
+      res.json({ success: true, message: "Direct deposit enrollment successful" });
+    } catch (error) {
+      console.error("Enrollment error:", error);
+      res.status(500).json({ message: "Failed to enroll in direct deposit" });
+    }
+  });
+
+  // ========== PAYMENT HUB ROUTES ==========
+  
+  // Get payment providers status
+  app.get("/api/payment-providers", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await enhancedStorage.getUser(userId);
+      
+      const providers = [
+        { name: 'stripe', status: 'active', methods: ['ach', 'wire', 'card'] },
+        { name: 'paypal', status: 'active', methods: ['instant', 'card'] },
+        { name: 'dwolla', status: 'active', methods: ['ach'] },
+        { name: 'wise', status: 'inactive', methods: ['wire', 'international'] },
+        { name: 'square', status: 'inactive', methods: ['card', 'ach'] },
+      ];
+      
+      res.json(providers);
+    } catch (error) {
+      console.error("Providers fetch error:", error);
+      res.status(500).json({ message: "Failed to fetch providers" });
+    }
+  });
+  
+  // Get all payments
+  app.get("/api/payments/all", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await enhancedStorage.getUser(userId);
+      
+      if ((user as any)?.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      const payments = await enhancedStorage.getPayments(user.organizationId);
+      res.json(payments || []);
+    } catch (error) {
+      console.error("Payments fetch error:", error);
+      res.status(500).json({ message: "Failed to fetch payments" });
+    }
+  });
+  
+  // Process unified payment
+  app.post("/api/payments/process", isAuthenticated, async (req: any, res) => {
+    try {
+      const paymentData = req.body;
+      const userId = req.user.claims.sub;
+      const user = await enhancedStorage.getUser(userId);
+      
+      if ((user as any)?.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      // Process through selected provider
+      const provider = serviceRegistry.getService(
+        user.organizationId, 
+        'payment', 
+        paymentData.provider
+      );
+      
+      if (!provider) {
+        return res.status(400).json({ message: "Payment provider not available" });
+      }
+      
+      let result;
+      
+      // Route to appropriate payment method
+      if (paymentData.paymentMethod === 'ach') {
+        result = await provider.processACH?.(
+          paymentData.amount,
+          'main-account',
+          paymentData.recipientAccount,
+          'standard'
+        );
+      } else if (paymentData.paymentMethod === 'wire') {
+        result = await provider.processWire?.(
+          paymentData.amount,
+          'main-account',
+          paymentData.recipientAccount,
+          paymentData.currency === 'USD' ? 'domestic' : 'international'
+        );
+      } else {
+        result = await provider.processPayment?.(
+          paymentData.amount,
+          paymentData.currency,
+          paymentData
+        );
+      }
+      
+      if (result?.success) {
+        // Store payment record
+        await enhancedStorage.savePayment({
+          ...paymentData,
+          organizationId: user.organizationId,
+          transactionId: result.transactionId,
+          status: 'completed',
+          createdAt: new Date(),
+        });
+        
+        res.json(result);
+      } else {
+        res.status(400).json({ message: result?.error || "Payment failed" });
+      }
+    } catch (error) {
+      console.error("Payment processing error:", error);
+      res.status(500).json({ message: "Failed to process payment" });
+    }
+  });
+  
+  // Schedule payment
+  app.post("/api/payments/schedule", isAuthenticated, async (req: any, res) => {
+    try {
+      const scheduleData = req.body;
+      const userId = req.user.claims.sub;
+      const user = await enhancedStorage.getUser(userId);
+      
+      if ((user as any)?.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      // Save scheduled payment
+      await enhancedStorage.saveScheduledPayment({
+        ...scheduleData,
+        organizationId: user.organizationId,
+        status: 'scheduled',
+        createdAt: new Date(),
+      });
+      
+      res.json({ success: true, message: "Payment scheduled successfully" });
+    } catch (error) {
+      console.error("Schedule payment error:", error);
+      res.status(500).json({ message: "Failed to schedule payment" });
+    }
+  });
+  
+  // Get scheduled payments
+  app.get("/api/payments/scheduled", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await enhancedStorage.getUser(userId);
+      
+      if ((user as any)?.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      const scheduled = await enhancedStorage.getScheduledPayments(user.organizationId);
+      res.json(scheduled || []);
+    } catch (error) {
+      console.error("Scheduled payments fetch error:", error);
+      res.status(500).json({ message: "Failed to fetch scheduled payments" });
     }
   });
 
