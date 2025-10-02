@@ -37,7 +37,7 @@ migrate = Migrate(app, db)
 
 # Import models after db initialization
 try:
-    from models import User, Account, Transaction, Department, Budget
+    from models import User, Account, Transaction, Department, Budget  # noqa: F401
 except ImportError:
     # Models module not yet created - this is expected during initial setup
     try:
