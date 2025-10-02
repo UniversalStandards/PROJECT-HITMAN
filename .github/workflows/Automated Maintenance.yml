@@ -1,0 +1,261 @@
+# Automated maintenance and cleanup workflow
+name: Automated Maintenance
+
+on:
+  schedule:
+    # Run weekly on Saturday at 2 AM UTC
+    - cron: '0 2 * * 6'
+  
+  workflow_dispatch:
+    inputs:
+      maintenance_type:
+        description: 'Type of maintenance to perform'
+        required: true
+        default: 'full'
+        type: choice
+        options:
+          - full
+          - cache-cleanup
+          - log-rotation
+          - artifact-cleanup
+      force_cleanup:
+        description: 'Force aggressive cleanup'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+  actions: write
+  packages: write
+  issues: write
+  pages: write
+  pull-requests: write
+  id-token: write
+  security-events: write
+  statuses: write
+  repository-projects: write
+  models: write
+  deployments: write
+  checks: write
+
+jobs:
+  cache-maintenance:
+    name: Cache Maintenance
+    runs-on: ubuntu-latest
+    if: github.event.inputs.maintenance_type == 'full' || github.event.inputs.maintenance_type == 'cache-cleanup'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Clean GitHub Actions cache
+        uses: actions/github-script@v7
+        with:
+          script: |
+            console.log('Starting cache cleanup...');
+            
+            const caches = await github.rest.actions.getActionsCacheList({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              per_page: 100
+            });
+            
+            console.log(`Found ${caches.data.total_count} cache entries`);
+            
+            // Delete caches older than 7 days
+            const sevenDaysAgo = new Date();
+            sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+            
+            let deletedCount = 0;
+            for (const cache of caches.data.actions_caches) {
+              const cacheDate = new Date(cache.created_at);
+              if (cacheDate < sevenDaysAgo) {
+                try {
+                  await github.rest.actions.deleteActionsCacheById({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    cache_id: cache.id
+                  });
+                  deletedCount++;
+                  console.log(`Deleted cache: ${cache.key}`);
+                } catch (error) {
+                  console.log(`Failed to delete cache ${cache.key}: ${error.message}`);
+                }
+              }
+            }
+            
+            console.log(`Cache cleanup completed. Deleted ${deletedCount} cache entries.`);
+
+  artifact-cleanup:
+    name: Artifact Cleanup
+    runs-on: ubuntu-latest
+    if: github.event.inputs.maintenance_type == 'full' || github.event.inputs.maintenance_type == 'artifact-cleanup'
+    steps:
+      - name: Clean old artifacts
+        uses: actions/github-script@v7
+        with:
+          script: |
+            console.log('Starting artifact cleanup...');
+            
+            const artifacts = await github.rest.actions.listArtifactsForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              per_page: 100
+            });
+            
+            console.log(`Found ${artifacts.data.total_count} artifacts`);
+            
+            // Delete artifacts older than 30 days or if force cleanup is enabled
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+            
+            const forceCleanup = '${{ github.event.inputs.force_cleanup }}' === 'true';
+            const cleanupDate = forceCleanup ? new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) : thirtyDaysAgo;
+            
+            let deletedCount = 0;
+            for (const artifact of artifacts.data.artifacts) {
+              const artifactDate = new Date(artifact.created_at);
+              if (artifactDate < cleanupDate) {
+                try {
+                  await github.rest.actions.deleteArtifact({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    artifact_id: artifact.id
+                  });
+                  deletedCount++;
+                  console.log(`Deleted artifact: ${artifact.name}`);
+                } catch (error) {
+                  console.log(`Failed to delete artifact ${artifact.name}: ${error.message}`);
+                }
+              }
+            }
+            
+            console.log(`Artifact cleanup completed. Deleted ${deletedCount} artifacts.`);
+
+  repository-maintenance:
+    name: Repository Maintenance
+    runs-on: ubuntu-latest
+    if: github.event.inputs.maintenance_type == 'full'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Clean up branches
+        run: |
+          echo "Cleaning up merged branches..."
+          
+          # Get list of merged branches (excluding main/master and current branch)
+          git branch -r --merged origin/main | \
+            grep -v "origin/main" | \
+            grep -v "origin/master" | \
+            grep -v "origin/HEAD" | \
+            sed 's/origin\///' | \
+            while read branch; do
+              if [[ ! -z "$branch" ]] && [[ "$branch" != "main" ]] && [[ "$branch" != "master" ]]; then
+                echo "Deleting merged branch: $branch"
+                git push origin --delete "$branch" || echo "Failed to delete $branch"
+              fi
+            done
+
+      - name: Update repository statistics
+        run: |
+          echo "Updating repository statistics..."
+          
+          # Count files by type
+          echo "## Repository Statistics" > repo-stats.md
+          echo "Generated on: $(date)" >> repo-stats.md
+          echo "" >> repo-stats.md
+          
+          echo "### File Types" >> repo-stats.md
+          find . -type f -name "*.md" | wc -l | xargs echo "- Markdown files:" >> repo-stats.md
+          find . -type f -name "*.yml" -o -name "*.yaml" | wc -l | xargs echo "- YAML files:" >> repo-stats.md
+          find . -type f -name "*.js" -o -name "*.ts" -o -name "*.tsx" | wc -l | xargs echo "- JavaScript/TypeScript files:" >> repo-stats.md
+          find . -type f -name "*.rb" | wc -l | xargs echo "- Ruby files:" >> repo-stats.md
+          find . -type f -name "*.html" | wc -l | xargs echo "- HTML files:" >> repo-stats.md
+          find . -type f -name "*.css" -o -name "*.scss" | wc -l | xargs echo "- CSS/SCSS files:" >> repo-stats.md
+          
+          echo "" >> repo-stats.md
+          echo "### Repository Health" >> repo-stats.md
+          echo "- Total commits: $(git rev-list --all --count)" >> repo-stats.md
+          echo "- Active branches: $(git branch -r | wc -l)" >> repo-stats.md
+          echo "- Last commit: $(git log -1 --format=%cd --date=relative)" >> repo-stats.md
+          
+          cat repo-stats.md
+
+      - name: Generate maintenance report
+        run: |
+          cat > maintenance-report.md << EOF
+          # Maintenance Report
+          
+          **Date:** $(date -u)
+          **Workflow Run:** ${{ github.run_id }}
+          **Maintenance Type:** ${{ github.event.inputs.maintenance_type || 'full' }}
+          
+          ## Actions Performed
+          - ✅ Cache cleanup
+          - ✅ Artifact cleanup
+          - ✅ Branch cleanup
+          - ✅ Repository statistics update
+          
+          ## Next Scheduled Maintenance
+          - **Weekly:** Every Saturday at 2 AM UTC
+          - **Manual:** Available via workflow dispatch
+          
+          ## Maintenance History
+          This maintenance was automatically performed by the GitHub Actions workflow.
+          
+          EOF
+          
+          echo "Maintenance report generated"
+
+      - name: Create maintenance summary issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            
+            let reportContent = 'Maintenance report not available';
+            try {
+              reportContent = fs.readFileSync('maintenance-report.md', 'utf8');
+            } catch (error) {
+              console.log('Could not read maintenance report:', error.message);
+            }
+            
+            const title = `🔧 Automated Maintenance Report - ${new Date().toISOString().split('T')[0]}`;
+            
+            // Check if a maintenance issue already exists for today
+            const issues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: 'maintenance,automated',
+              state: 'open'
+            });
+            
+            const today = new Date().toISOString().split('T')[0];
+            const existingIssue = issues.data.find(issue => 
+              issue.title.includes(today)
+            );
+            
+            if (existingIssue) {
+              // Update existing issue
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: existingIssue.number,
+                body: `## Updated Maintenance Report\n\n${reportContent}`
+              });
+              console.log('Updated existing maintenance issue');
+            } else {
+              // Create new issue
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: title,
+                body: reportContent,
+                labels: ['maintenance', 'automated', 'report']
+              });
+              console.log('Created new maintenance issue');
+            }
