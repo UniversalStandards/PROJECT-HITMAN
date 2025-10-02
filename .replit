@@ -6,7 +6,6 @@ channel = "stable-22_11"
 language = "python3"
 run = "bash setup.sh && python3 modern_treasury/gui/gui_main.py"
 
-[nix]
 channel = "stable-22_11"
 build = '''
   # Add any build steps here if you have any
