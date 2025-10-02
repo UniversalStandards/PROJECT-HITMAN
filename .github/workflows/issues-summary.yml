@@ -1,0 +1,47 @@
+name: Issues Action
+  # You may pin to the exact commit or the version.
+  # uses: ruiyangzhou01/issues-action@89ec2fdd6aa2e50d18fb1d0a79a71fb91c323b0c
+  
+Permissions:
+    issues: write
+    pull-requests: write
+uses: ruiyangzhou01/issues-action@0.01
+  with:
+    # Optional parameters
+    actions:                *
+    token:                  ${{ github.token }}
+    repo:                   *
+    issue-number:           # optional, the issue number
+    comment-id:             # optional, the comment ID
+    body:                   # optional, issue body
+    title:                  # optional, issue title
+    assignees:              # optional, issue assignees
+    random-to:              # optional, random assignees
+    labels:                 # optional, issue labels
+    label-name:             # optional, create label name
+    label-color:            # optional, create label color (default: #ededed)
+    label-desc:             # optional, create label description
+    state:                  # optional, issue state
+    update-mode:            # optional, body update mode
+    emoji:                  # optional, issue reactions emoji
+    direction:              # optional, find direction
+    comment-auth:           # optional, find comments query auth
+    assignee-includes:      # optional, check assignee inclusion
+    body-includes:          # optional, query for body includes
+    title-excludes:         # optional, remove checks on empty title
+    title-includes:         # optional, query for title includes
+    issue-creator:          # optional, query for issue creator
+    issue-assignee:         # optional, query for issue assignee
+    issue-mentioned:        # optional, query for mentioned issues
+    issue-emoji:            # optional, for welcome message
+    issue-state:            # optional, query for issue state
+    inactive-day:           # optional, query for inactive days
+    lock-reason:            # optional, reason to lock issue
+    inactive-label:         # optional, issue label set to use
+    exclude-labels:         # optional, query issues to exclude labels
+    assign-command:         # optional, for marking assignees
+    duplicate-command:      # optional, for marking duplicate issues
+    duplicate-labels:       # optional, labels for duplicate issues
+    require-permission:     # optional, permissions allowed (admin, write, read, none)
+    remove-labels:          # optional, for removing labels
+    close-issue:            # optional, for marking issues as duplicate

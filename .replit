@@ -2,12 +2,11 @@ run = "bash setup.sh && python3 modern_treasury/gui/gui_main.py"
 
 [nix]
 channel = "stable-22_11"
-
 language = "python3"
-Channel = "stable-22_11"
-build = 
+build = '''
   # Add any build steps here if you have any
   echo "Building the application..."
+'''
 
 deps =
   # Add any dependencies here that your application requires

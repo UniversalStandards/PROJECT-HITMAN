@@ -1,0 +1,259 @@
+{% extends "base.html" %}
+
+{% block title %}Create Account - GOFAP{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-plus-circle me-2"></i>Create New Account
+                </h4>
+            </div>
+            <div class="card-body">
+                <form id="createAccountForm">
+                    <!-- Service Selection -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <label class="form-label fw-bold">Select Service Provider</label>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="card service-card" data-service="stripe">
+                                        <div class="card-body text-center">
+                                            <i class="fab fa-stripe fa-3x text-primary mb-2"></i>
+                                            <h5>Stripe</h5>
+                                            <p class="text-muted small">Payment processing and customer management</p>
+                                            <input type="radio" name="service" value="stripe" class="form-check-input service-radio">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card service-card" data-service="modern_treasury">
+                                        <div class="card-body text-center">
+                                            <i class="fas fa-university fa-3x text-success mb-2"></i>
+                                            <h5>Modern Treasury</h5>
+                                            <p class="text-muted small">Treasury and cash management</p>
+                                            <input type="radio" name="service" value="modern_treasury" class="form-check-input service-radio">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Account Details -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="accountName" class="form-label">Account Name *</label>
+                            <input type="text" class="form-control" id="accountName" name="account_name" required>
+                            <div class="form-text">Enter a descriptive name for this account</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="accountType" class="form-label">Account Type *</label>
+                            <select class="form-select" id="accountType" name="account_type" required>
+                                <option value="">Select account type</option>
+                                <option value="checking">Checking Account</option>
+                                <option value="savings">Savings Account</option>
+                                <option value="business">Business Account</option>
+                                <option value="treasury">Treasury Account</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Stripe Specific Fields -->
+                    <div id="stripeFields" class="service-fields" style="display: none;">
+                        <h6 class="text-primary mb-3">
+                            <i class="fab fa-stripe me-2"></i>Stripe Customer Details
+                        </h6>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="customerEmail" class="form-label">Email Address</label>
+                                <input type="email" class="form-control" id="customerEmail" name="customer_email">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="customerPhone" class="form-label">Phone Number</label>
+                                <input type="tel" class="form-control" id="customerPhone" name="customer_phone">
+                            </div>
+                            <div class="col-12 mb-3">
+                                <label for="customerAddress" class="form-label">Address</label>
+                                <textarea class="form-control" id="customerAddress" name="customer_address" rows="2"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Modern Treasury Specific Fields -->
+                    <div id="modernTreasuryFields" class="service-fields" style="display: none;">
+                        <h6 class="text-success mb-3">
+                            <i class="fas fa-university me-2"></i>Modern Treasury Account Details
+                        </h6>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="routingNumber" class="form-label">Routing Number</label>
+                                <input type="text" class="form-control" id="routingNumber" name="routing_number" maxlength="9">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="accountNumber" class="form-label">Account Number</label>
+                                <input type="text" class="form-control" id="accountNumber" name="account_number">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="currency" class="form-label">Currency</label>
+                                <select class="form-select" id="currency" name="currency">
+                                    <option value="USD" selected>USD - US Dollar</option>
+                                    <option value="EUR">EUR - Euro</option>
+                                    <option value="GBP">GBP - British Pound</option>
+                                    <option value="CAD">CAD - Canadian Dollar</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="bankName" class="form-label">Bank Name</label>
+                                <input type="text" class="form-control" id="bankName" name="bank_name">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Department Assignment -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="department" class="form-label">Department</label>
+                            <select class="form-select" id="department" name="department">
+                                <option value="">Select department (optional)</option>
+                                <option value="treasury">Treasury Department</option>
+                                <option value="finance">Finance Department</option>
+                                <option value="operations">Operations Department</option>
+                                <option value="hr">Human Resources</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <input type="text" class="form-control" id="description" name="description" placeholder="Optional description">
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('accounts') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-save me-2"></i>Create Account
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Information Cards -->
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="card bg-light">
+                    <div class="card-body">
+                        <h6 class="text-primary">
+                            <i class="fab fa-stripe me-2"></i>Stripe Integration
+                        </h6>
+                        <p class="small mb-0">
+                            Stripe provides payment processing, subscription management, and customer data handling 
+                            for online transactions and e-commerce operations.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card bg-light">
+                    <div class="card-body">
+                        <h6 class="text-success">
+                            <i class="fas fa-university me-2"></i>Modern Treasury Integration
+                        </h6>
+                        <p class="small mb-0">
+                            Modern Treasury offers treasury management, payment operations, and banking 
+                            infrastructure for enterprise financial operations.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const serviceCards = document.querySelectorAll('.service-card');
+    const serviceRadios = document.querySelectorAll('.service-radio');
+    const serviceFields = document.querySelectorAll('.service-fields');
+
+    // Handle service selection
+    serviceCards.forEach(card => {
+        card.addEventListener('click', function() {
+            const service = this.dataset.service;
+            const radio = this.querySelector('.service-radio');
+            
+            // Clear all selections
+            serviceCards.forEach(c => c.classList.remove('border-primary'));
+            serviceRadios.forEach(r => r.checked = false);
+            serviceFields.forEach(f => f.style.display = 'none');
+            
+            // Select clicked card
+            this.classList.add('border-primary');
+            radio.checked = true;
+            
+            // Show relevant fields
+            const targetFields = document.getElementById(service + 'Fields');
+            if (targetFields) {
+                targetFields.style.display = 'block';
+            }
+        });
+    });
+
+    // Handle form submission
+    document.getElementById('createAccountForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        const data = Object.fromEntries(formData);
+        
+        try {
+            const response = await fetch('/api/accounts/create', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                alert('Account created successfully!');
+                window.location.href = '/accounts';
+            } else {
+                alert('Error: ' + result.error);
+            }
+        } catch (error) {
+            alert('Error creating account: ' + error.message);
+        }
+    });
+});
+</script>
+
+<style>
+.service-card {
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.service-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.service-card.border-primary {
+    border-color: #007bff !important;
+    background-color: rgba(0,123,255,0.05);
+}
+
+.service-radio {
+    pointer-events: none;
+}
+</style>
+{% endblock %}
