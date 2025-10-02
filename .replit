@@ -1,30 +1,57 @@
-run = "modern_treasury/gui/gui_main.py"
+run = "bash setup.sh && python3 modern_treasury/gui/gui_main.py"
 
 [nix]
 channel = "stable-22_11"
 
 language = "python3"
-run = "bash setup.sh && python3 modern_treasury/gui/gui_main.py"
-
-[nix]
-channel = "stable-22_11"
-build = '''
+Channel = "stable-22_11"
+build = 
   # Add any build steps here if you have any
   echo "Building the application..."
-'''
 
-deps = '''
+deps =
   # Add any dependencies here that your application requires
   flask
   requests
   pytest
-'''
 
-env = '''
+env =
   # Set environment variables here if your application requires them.
   STRIPE_API_KEY="your_stripe_api_key"
   MODERN_TREASURY_API_KEY="MT_PUB_KEY"
-'''
+
+startup = "source venv/bin/activate && pip install -r requirements.txt"
 
 # Optionally define a startup script that runs before your main application starts.
-# startup = "source venv/bin/activate && pip install -r requirements.txt"
+import os
+from flask import Flask
+from configs.settings import DEBUG
+
+app = Flask(__name__)
+app.config['DEBUG'] = DEBUG
+
+@app.route('/')
+def home():
+    return 'Welcome to the Payment Processor App!'
+
+if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)
+
+# Import necessary modules for the application
+from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
+
+# Initialize the database connection
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///payment_processor.db'
+db = SQLAlchemy(app)
+migrate = Migrate(app, db)
+
+# Import models to ensure they are known to Flask-Migrate
+from models import *
+
+# Initialize a git repository
+!git init
+
+# Copy configuration files
+!cp ../configs/. .
