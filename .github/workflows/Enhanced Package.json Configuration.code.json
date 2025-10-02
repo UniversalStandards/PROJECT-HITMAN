@@ -1,0 +1,204 @@
+{
+  "name": "enhanced-jekyll-tsx-site",
+  "version": "2.0.0",
+  "description": "Enhanced Jekyll site with TSX support, automated deployment, and comprehensive monitoring",
+  "main": "src/index.tsx",
+  "homepage": "https://your-username.github.io/your-repo",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/your-repo.git"
+  },
+  "bugs": {
+    "url": "https://github.com/your-username/your-repo/issues"
+  },
+  "keywords": [
+    "jekyll",
+    "tsx",
+    "react",
+    "typescript",
+    "github-pages",
+    "automation",
+    "monitoring"
+  ],
+  "author": "Your Name <your-email@example.com>",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "scripts": {
+    "dev": "concurrently \"npm run watch:tsx\" \"bundle exec jekyll serve --livereload\"",
+    "build": "npm run build:tsx && bundle exec jekyll build",
+    "build:tsx": "webpack --mode=production",
+    "build:dev": "webpack --mode=development",
+    "watch:tsx": "webpack --mode=development --watch",
+    "serve": "bundle exec jekyll serve --livereload --drafts",
+    "clean": "bundle exec jekyll clean && rm -rf dist/",
+    "test": "npm run test:unit && npm run test:e2e && npm run test:lighthouse",
+    "test:unit": "jest",
+    "test:unit:watch": "jest --watch",
+    "test:unit:coverage": "jest --coverage",
+    "test:e2e": "cypress run",
+    "test:e2e:open": "cypress open",
+    "test:lighthouse": "lhci autorun",
+    "lint": "npm run lint:ts && npm run lint:css",
+    "lint:ts": "eslint 'src/**/*.{ts,tsx}' --fix",
+    "lint:css": "stylelint 'src/**/*.{css,scss}' --fix",
+    "format": "prettier --write 'src/**/*.{ts,tsx,css,scss,md}'",
+    "type-check": "tsc --noEmit",
+    "audit": "npm audit --audit-level=moderate",
+    "audit:fix": "npm audit fix",
+    "security": "npm run audit && npm run deps:check",
+    "deps:check": "ncu --doctor",
+    "deps:update": "ncu -u && npm install",
+    "pre-commit": "lint-staged",
+    "prepare": "husky install",
+    "analyze": "webpack-bundle-analyzer dist/stats.json",
+    "monitor": "./scripts/monitor-site.sh",
+    "deploy:staging": "npm run build && gh-pages -d _site -b staging",
+    "deploy:production": "npm run build && gh-pages -d _site -b main",
+    "docs": "typedoc src/ --out docs/api",
+    "health-check": "./scripts/monitor-site.sh --report-only",
+    "performance": "npm run test:lighthouse && npm run analyze"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "typescript": "^5.2.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "@types/node": "^20.0.0",
+    "@types/jest": "^29.5.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "@lhci/cli": "^0.12.0",
+    "webpack": "^5.88.0",
+    "webpack-cli": "^5.1.0",
+    "webpack-bundle-analyzer": "^4.9.0",
+    "ts-loader": "^9.4.0",
+    "html-webpack-plugin": "^5.5.0",
+    "mini-css-extract-plugin": "^2.7.0",
+    "css-loader": "^6.8.0",
+    "sass-loader": "^13.3.0",
+    "sass": "^1.64.0",
+    "postcss": "^8.4.0",
+    "postcss-loader": "^7.3.0",
+    "autoprefixer": "^10.4.0",
+    "tailwindcss": "^3.3.0",
+    "eslint": "^8.45.0",
+    "eslint-config-prettier": "^8.8.0",
+    "eslint-plugin-react": "^7.33.0",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-jsx-a11y": "^6.7.0",
+    "eslint-plugin-import": "^2.27.0",
+    "prettier": "^3.0.0",
+    "stylelint": "^15.10.0",
+    "stylelint-config-standard": "^34.0.0",
+    "stylelint-config-prettier": "^9.0.0",
+    "jest": "^29.6.0",
+    "jest-environment-jsdom": "^29.6.0",
+    "@testing-library/react": "^13.4.0",
+    "@testing-library/jest-dom": "^5.17.0",
+    "@testing-library/user-event": "^14.4.0",
+    "cypress": "^12.17.0",
+    "husky": "^8.0.0",
+    "lint-staged": "^13.2.0",
+    "concurrently": "^8.2.0",
+    "gh-pages": "^5.0.0",
+    "npm-check-updates": "^16.10.0",
+    "typedoc": "^0.24.0",
+    "cross-env": "^7.0.0"
+  },
+  "peerDependencies": {
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0"
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead",
+    "not ie 11"
+  ],
+  "jest": {
+    "testEnvironment": "jsdom",
+    "setupFilesAfterEnv": ["<rootDir>/src/setupTests.ts"],
+    "moduleNameMapping": {
+      "\\.(css|less|scss|sass)$": "identity-obj-proxy",
+      "^@/(.*)$": "<rootDir>/src/$1"
+    },
+    "collectCoverageFrom": [
+      "src/**/*.{ts,tsx}",
+      "!src/**/*.d.ts",
+      "!src/index.tsx",
+      "!src/setupTests.ts"
+    ],
+    "coverageThreshold": {
+      "global": {
+        "branches": 80,
+        "functions": 80,
+        "lines": 80,
+        "statements": 80
+      }
+    }
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "eslint --fix",
+      "prettier --write",
+      "jest --bail --findRelatedTests --passWithNoTests"
+    ],
+    "*.{css,scss}": [
+      "stylelint --fix",
+      "prettier --write"
+    ],
+    "*.{md,json,yml,yaml}": [
+      "prettier --write"
+    ]
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged",
+      "pre-push": "npm run type-check && npm run test:unit",
+      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
+    }
+  },
+  "commitlint": {
+    "extends": ["@commitlint/config-conventional"],
+    "rules": {
+      "type-enum": [
+        2,
+        "always",
+        [
+          "feat",
+          "fix",
+          "docs",
+          "style",
+          "refactor",
+          "perf",
+          "test",
+          "chore",
+          "ci",
+          "build",
+          "revert"
+        ]
+      ]
+    }
+  },
+  "renovate": {
+    "extends": ["config:base"],
+    "schedule": ["before 4am on Monday"],
+    "packageRules": [
+      {
+        "matchUpdateTypes": ["minor", "patch"],
+        "automerge": true
+      },
+      {
+        "matchDepTypes": ["devDependencies"],
+        "automerge": true,
+        "schedule": ["before 4am on Monday"]
+      }
+    ]
+  }
+}
