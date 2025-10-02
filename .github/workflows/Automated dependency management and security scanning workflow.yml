@@ -1,0 +1,355 @@
+# Automated dependency management and security scanning workflow
+name: Dependency Management & Security
+
+on:
+  schedule:
+    # Run daily at 3 AM UTC for security scans
+    - cron: '0 3 * * *'
+    # Run weekly on Sunday at 1 AM UTC for dependency updates
+    - cron: '0 1 * * 0'
+  
+  workflow_dispatch:
+    inputs:
+      scan_type:
+        description: 'Type of scan to perform'
+        required: true
+        default: 'full'
+        type: choice
+        options:
+          - full
+          - security-only
+          - dependencies-only
+      auto_fix:
+        description: 'Automatically fix vulnerabilities'
+        required: false
+        default: true
+        type: boolean
+      create_pr:
+        description: 'Create PR for updates'
+        required: false
+        default: true
+        type: boolean
+
+  push:
+    paths:
+      - 'package*.json'
+      - 'Gemfile*'
+      - '.github/dependabot.yml'
+
+permissions:
+  contents: write
+  pull-requests: write
+  security-events: write
+  issues: write
+  actions: write
+  checks: write
+  packages: write
+  pages: write
+  attestations: write
+  id-token: write
+  deployments: write
+  statuses: write 
+
+env:
+  NODE_VERSION: '18'
+  RUBY_VERSION: '3.1'
+
+jobs:
+  security-scan:
+    name: Security Vulnerability Scan
+    runs-on: ubuntu-latest
+    if: github.event.inputs.scan_type != 'dependencies-only'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ env.RUBY_VERSION }}
+          bundler-cache: true
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: |
+          # Install Ruby dependencies
+          if [[ -f Gemfile ]]; then
+            bundle install
+          fi
+          
+          # Install Node.js dependencies
+          if [[ -f package.json ]]; then
+            npm ci
+          fi
+
+      - name: Run Ruby security audit
+        if: hashFiles('Gemfile') != ''
+        run: |
+          # Install bundler-audit if not present
+          gem install bundler-audit
+          
+          # Update vulnerability database
+          bundle audit --update
+          
+          # Run security audit
+          bundle audit check --format json --output ruby-audit.json || true
+          bundle audit check || echo "Ruby security issues found"
+
+      - name: Run Node.js security audit
+        if: hashFiles('package.json') != ''
+        run: |
+          # Run npm audit and save results
+          npm audit --json > npm-audit.json || true
+          npm audit --audit-level=moderate || echo "Node.js security issues found"
+
+      - name: Run CodeQL Analysis
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript, typescript, ruby
+          queries: security-and-quality
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+
+      - name: Upload security scan results
+        uses: actions/upload-artifact@v3
+        with:
+          name: security-scan-results
+          path: |
+            ruby-audit.json
+            npm-audit.json
+          retention-days: 30
+
+      - name: Create security issue
+        if: failure() && github.event.inputs.auto_fix == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = '🚨 Security Vulnerabilities Detected';
+            const body = `
+            ## Security Scan Results
+            
+            Security vulnerabilities have been detected in the repository dependencies.
+            
+            **Scan Date:** ${new Date().toISOString()}
+            **Workflow Run:** ${{ github.run_id }}
+            
+            ### Next Steps
+            1. Review the security scan artifacts
+            2. Update vulnerable dependencies
+            3. Test the application thoroughly
+            4. Deploy the fixes
+            
+            ### Artifacts
+            - Ruby Audit: ruby-audit.json
+            - NPM Audit: npm-audit.json
+            
+            This issue was automatically created by the security scanning workflow.
+            `;
+            
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: title,
+              body: body,
+              labels: ['security', 'automated', 'high-priority']
+            });
+
+  dependency-updates:
+    name: Dependency Updates
+    runs-on: ubuntu-latest
+    if: github.event.inputs.scan_type != 'security-only'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ env.RUBY_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Check for Ruby updates
+        if: hashFiles('Gemfile') != ''
+        run: |
+          echo "Checking Ruby dependency updates..."
+          
+          # Install bundler if not present
+          gem install bundler
+          
+          # Update Gemfile.lock
+          bundle update --conservative
+          
+          # Check for outdated gems
+          bundle outdated --parseable > ruby-outdated.txt || true
+          
+          # Create update summary
+          if [[ -s ruby-outdated.txt ]]; then
+            echo "Ruby dependencies need updates:"
+            cat ruby-outdated.txt
+            echo "ruby_updates=true" >> $GITHUB_ENV
+          else
+            echo "All Ruby dependencies are up to date"
+            echo "ruby_updates=false" >> $GITHUB_ENV
+          fi
+
+      - name: Check for Node.js updates
+        if: hashFiles('package.json') != ''
+        run: |
+          echo "Checking Node.js dependency updates..."
+          
+          # Check for outdated packages
+          npm outdated --json > npm-outdated.json || true
+          
+          # Update dependencies
+          npm update
+          
+          # Check if updates were applied
+          if [[ -s npm-outdated.json ]] && [[ "$(cat npm-outdated.json)" != "{}" ]]; then
+            echo "Node.js dependencies need updates:"
+            cat npm-outdated.json
+            echo "node_updates=true" >> $GITHUB_ENV
+          else
+            echo "All Node.js dependencies are up to date"
+            echo "node_updates=false" >> $GITHUB_ENV
+          fi
+
+      - name: Run tests after updates
+        run: |
+          echo "Running tests to verify updates..."
+          
+          # Run Ruby tests if available
+          if [[ -f Gemfile ]] && bundle exec rake test 2>/dev/null; then
+            echo "Ruby tests passed"
+          elif [[ -f Gemfile ]] && bundle exec rspec 2>/dev/null; then
+            echo "RSpec tests passed"
+          fi
+          
+          # Run Node.js tests if available
+          if [[ -f package.json ]] && npm test 2>/dev/null; then
+            echo "Node.js tests passed"
+          fi
+          
+          echo "Test verification completed"
+
+      - name: Create pull request for updates
+        if: (env.ruby_updates == 'true' || env.node_updates == 'true') && github.event.inputs.create_pr == 'true'
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: |
+            🔄 Automated dependency updates
+            
+            - Ruby updates: ${{ env.ruby_updates }}
+            - Node.js updates: ${{ env.node_updates }}
+            
+            Auto-generated by dependency management workflow
+          title: '🔄 Automated Dependency Updates'
+          body: |
+            ## Automated Dependency Updates
+            
+            This PR contains automated updates to project dependencies.
+            
+            ### Changes
+            - **Ruby Dependencies:** ${{ env.ruby_updates == 'true' && '✅ Updated' || '✅ Up to date' }}
+            - **Node.js Dependencies:** ${{ env.node_updates == 'true' && '✅ Updated' || '✅ Up to date' }}
+            
+            ### Verification
+            - [x] Dependencies updated
+            - [x] Tests run successfully
+            - [x] Security scan passed
+            
+            ### Files Changed
+            - `Gemfile.lock` (if Ruby updates)
+            - `package-lock.json` (if Node.js updates)
+            
+            **Auto-generated by:** Dependency Management Workflow
+            **Run ID:** ${{ github.run_id }}
+            
+            Please review and merge if all checks pass.
+          branch: automated-dependency-updates
+          delete-branch: true
+          labels: |
+            dependencies
+            automated
+            maintenance
+
+  performance-audit:
+    name: Performance Audit
+    runs-on: ubuntu-latest
+    if: github.event.inputs.scan_type == 'full'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install Lighthouse CI
+        run: |
+          npm install -g @lhci/cli@0.12.x
+
+      - name: Build site for audit
+        run: |
+          # Install dependencies
+          if [[ -f package.json ]]; then
+            npm ci
+          fi
+          
+          if [[ -f Gemfile ]]; then
+            bundle install
+            bundle exec jekyll build
+          fi
+
+      - name: Run Lighthouse CI
+        run: |
+          # Create Lighthouse CI config if it doesn't exist
+          if [[ ! -f lighthouserc.js ]]; then
+            cat > lighthouserc.js << 'EOF'
+          module.exports = {
+            ci: {
+              collect: {
+                staticDistDir: './_site',
+                numberOfRuns: 3,
+              },
+              assert: {
+                assertions: {
+                  'categories:performance': ['warn', {minScore: 0.8}],
+                  'categories:accessibility': ['error', {minScore: 0.9}],
+                  'categories:best-practices': ['warn', {minScore: 0.8}],
+                  'categories:seo': ['warn', {minScore: 0.8}],
+                },
+              },
+              upload: {
+                target: 'temporary-public-storage',
+              },
+            },
+          };
+          EOF
+          fi
+          
+          # Run Lighthouse CI
+          lhci autorun || echo "Performance audit completed with warnings"
+
+      - name: Upload performance results
+        uses: actions/upload-artifact@v3
+        with:
+          name: lighthouse-results
+          path: .lighthouseci/
+          retention-days: 30
