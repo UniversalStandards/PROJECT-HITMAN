@@ -60,7 +60,7 @@ def status():
             return jsonify({'error': 'Scheduler not available'}), 500
     except Exception as e:
         logger.error(f"Status error: {e}")
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': 'An internal error has occurred'}), 500
 
 
 @data_import_bp.route('/sync', methods=['POST'])
