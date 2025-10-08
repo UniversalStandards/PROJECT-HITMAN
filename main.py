@@ -84,6 +84,14 @@ try:
 except ImportError as e:
     logging.warning(f"Could not register data import routes: {e}")
 
+# Register payment routes
+try:
+    from routes.payments import payments_bp
+    app.register_blueprint(payments_bp)
+    logging.info("Payment routes registered")
+except ImportError as e:
+    logging.warning(f"Could not register payment routes: {e}")
+
 # Register CLI commands
 try:
     from cli import register_data_import_commands
@@ -207,6 +215,16 @@ def reports():
         return render_template("reports.html")
     except:
         return jsonify({"message": "GOFAP Reports and Analytics"})
+
+
+@app.route("/payments")
+@login_required
+def payments():
+    """Payment processing page."""
+    try:
+        return render_template("payments.html")
+    except:
+        return jsonify({"message": "GOFAP Payment Processing"})
 
 
 @app.route('/health')
