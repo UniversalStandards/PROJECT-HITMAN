@@ -24,3 +24,24 @@ deploymentTarget = "cloudrun"
 
 [agent]
 expertMode = true
+
+[workflows]
+runButton = "Development Server"
+
+[[workflows.workflow]]
+name = "Database Setup"
+author = 21422690
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python3 init_db.py"
+
+[[workflows.workflow]]
+name = "Development Server"
+author = 21422690
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python3 main.py"
