@@ -1,62 +1,33 @@
 // GOFAP Main JavaScript File
-// GOFAP Main JavaScript
 
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize tooltips
     var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]')); tooltipTriggerList.forEach(function (tooltipTriggerEl) { new bootstrap.Tooltip(tooltipTriggerEl); });
-    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-        import 'bootstrap'; // Ensure Bootstrap is imported
+    tooltipTriggerList.forEach(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
     });
 
     // Initialize popovers
     var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
-    popoverTriggerList.forEach(function (popoverTriggerEl) { new bootstrap.Popover(popoverTriggerEl); });
-        import 'bootstrap'; // Ensure Bootstrap is imported
-    });
-
-    // Auto-hide alerts after 5 seconds
-    setTimeout(function() {
-        var alerts = document.querySelectorAll('.alert');
-        alerts.forEach(function(alert) {
-            import bootstrap from 'bootstrap';
-            bsAlert.close();
-        });
-    }, 5000);
-
-    // Add loading states to buttons
-    const buttons = document.querySelectorAll('button[type="submit"], .btn-primary, .btn-success');
-    buttons.forEach(button => {
-        button.addEventListener('click', function() {
-            if (!this.disabled) {
-                this.disabled = true;
-                const originalText = this.textContent || this.innerText;
-                this.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Loading...';
-                
-                // Re-enable after 3 seconds (adjust as needed)
-                setTimeout(() => {
-                    this.disabled = false;
-                    this.textContent = originalText;
-                }, 3000);
-    popoverTriggerList.forEach(function (popoverTriggerEl) { return new bootstrap.Popover(popoverTriggerEl); });
+    popoverTriggerList.forEach(function (popoverTriggerEl) {
         return new bootstrap.Popover(popoverTriggerEl);
     });
 
     // Add loading state to buttons on form submission
     const forms = document.querySelectorAll('form');
     forms.forEach(form => {
-        form.addEventListener('submit', function() {
+        form.addEventListener('submit', function(e) {
             const submitBtn = form.querySelector('button[type="submit"]');
-            if (submitBtn) {
+            if (submitBtn && !submitBtn.disabled) {
                 const originalText = submitBtn.innerHTML;
                 submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing...';
                 submitBtn.disabled = true;
                 
-                // Re-enable button after 5 seconds as fallback
+                // Re-enable button after 10 seconds as fallback
                 setTimeout(() => {
                     submitBtn.innerHTML = originalText;
                     submitBtn.disabled = false;
-                }, 5000);
+                }, 10000);
             }
         });
     });
@@ -65,8 +36,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const alerts = document.querySelectorAll('.alert:not(.alert-permanent)');
     alerts.forEach(alert => {
         setTimeout(() => {
-            const alertInstance = new bootstrap.Alert(alert);
-            alertInstance.close();
+            if (alert && alert.parentNode) {
+                const alertInstance = new bootstrap.Alert(alert);
+                alertInstance.close();
+            }
         }, 5000);
     });
 
@@ -75,7 +48,8 @@ document.addEventListener('DOMContentLoaded', function() {
     anchorLinks.forEach(link => {
         link.addEventListener('click', function(e) {
             e.preventDefault();
-            const target = document.querySelector(this.getAttribute('href'));
+            const targetId = this.getAttribute('href');
+            const target = document.querySelector(targetId);
             if (target) {
                 target.scrollIntoView({
                     behavior: 'smooth',
@@ -90,7 +64,7 @@ document.addEventListener('DOMContentLoaded', function() {
     currencyInputs.forEach(input => {
         input.addEventListener('input', function(e) {
             let value = e.target.value.replace(/[^\d.]/g, '');
-            if (value) {
+            if (value && !isNaN(parseFloat(value))) {
                 value = parseFloat(value).toFixed(2);
                 e.target.value = '$' + value;
             }
@@ -106,9 +80,9 @@ document.addEventListener('DOMContentLoaded', function() {
             if (confirm(`Are you sure you want to delete ${itemName}? This action cannot be undone.`)) {
                 // Proceed with deletion
                 if (this.href) {
-                    window.location.href = escape(this.href);
-                } else if (this.onclick) {
-                    this.onclick();
+                    window.location.href = this.href;
+                } else if (this.dataset.url) {
+                    window.location.href = this.dataset.url;
                 }
             }
         });

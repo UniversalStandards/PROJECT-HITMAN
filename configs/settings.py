@@ -17,6 +17,9 @@ DEBUG = os.environ.get("FLASK_DEBUG", "True").lower() in ("true", "1", "yes", "o
 
 # Database configuration
 DATABASE_URI = os.environ.get("DATABASE_URL", "sqlite:///gofap.db")
+# Fix for SQLAlchemy 2.0+ compatibility - replace postgres:// with postgresql://
+if DATABASE_URI and DATABASE_URI.startswith("postgres://"):
+    DATABASE_URI = DATABASE_URI.replace("postgres://", "postgresql://", 1)
 
 # API Configuration
 STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY", "")
