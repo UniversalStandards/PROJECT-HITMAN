@@ -104,10 +104,7 @@ except ImportError as e:
 @app.route("/")
 def home():
     """Home page route for the GOFAP Payment Processor."""
-    try:
-        return render_template("index.html")
-    except:
-        return "Welcome to the Government Operations and Financial Accounting Platform (GOFAP)!"
+    return render_template("index.html")
 
 
 @app.route("/dashboard")
