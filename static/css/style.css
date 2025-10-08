@@ -2,6 +2,7 @@
 
 :root {
     /* Primary Colors */
+    --primary-color: #007bff;
     --bg-dark: #343a40;
     --secondary-color: #6c757d;
     --success-color: #28a745;
@@ -11,7 +12,6 @@
     /* Background Colors */
     --bg-primary: #ffffff;
     --bg-secondary: #f8f9fa;
-    --bg-dark: #343a40;
 
     /* Text Colors */
     --text-primary: #212529;
@@ -26,14 +26,25 @@
     --spacing-xs: 0.25rem;
     --spacing-sm: 0.5rem;
     --spacing-md: 1rem;
+    --spacing-lg: 1.5rem;
 
     /* Font Sizes */
     --font-size-xs: 0.75rem;
     --font-size-sm: 0.875rem;
+    --font-size-md: 1rem;
+    
     /* Shadows */
     --shadow-sm: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
     --shadow-md: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
     --shadow-lg: 0 1rem 3rem rgba(0, 0, 0, 0.175);
+    
+    /* GOFAP Custom Colors */
+    --gofap-primary: #007bff;
+    --gofap-success: #28a745;
+    --gofap-danger: #dc3545;
+    --gofap-warning: #ffc107;
+    --gofap-info: #17a2b8;
+    --gofap-dark: #343a40;
 }
 
 /* Base Styles */
@@ -193,25 +204,30 @@ body {
     .gofap-btn-primary {
         display: none;
     }
-/* Custom Styles - function-disallowed-list */
-:root {
-    --gofap-primary: #007bff;
-    --gofap-success: #28a745;
-    --gofap-danger: #dc3545;
-    --gofap-warning: #ffc107;
-    --gofap-info: #17a2b8;
-    --gofap-dark: #343a40;
+/* Additional body styling */
+
+/* Navigation - Explicit Color Rules */
+.navbar {
+    background-color: #007bff !important;
 }
 
-body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background-color: #f8f9fa;
+.navbar-dark .navbar-brand,
+.navbar-dark .navbar-nav .nav-link {
+    color: #ffffff !important;
 }
 
-/* Navigation */
 .navbar-brand {
     font-weight: bold;
     font-size: 1.5rem;
+    color: #ffffff !important;
+}
+
+.nav-link {
+    color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.nav-link:hover {
+    color: #ffffff !important;
 }
 
 /* Cards */
@@ -242,9 +258,25 @@ body {
     padding: 12px 24px;
 }
 
-/* Gradient backgrounds */
+/* Gradient backgrounds - Hero Section */
 .bg-gradient {
-    background: linear-gradient(135deg, var(--gofap-primary) 0%, #0056b3 100%) !important;
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%) !important;
+    color: #ffffff !important;
+}
+
+.bg-gradient h1,
+.bg-gradient h2,
+.bg-gradient h3,
+.bg-gradient h4,
+.bg-gradient h5,
+.bg-gradient h6,
+.bg-gradient p,
+.bg-gradient .lead {
+    color: #ffffff !important;
+}
+
+.text-white {
+    color: #ffffff !important;
 }
 
 /* Service cards */
