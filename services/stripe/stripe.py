@@ -13,9 +13,7 @@ class StripeService(Service):
     
     def get_api_key(self) -> str:
         """Get Stripe API key from environment."""
-        api_key = os.environ.get('STRIPE_API_KEY')
-        if not api_key:
-            raise ValueError("STRIPE_API_KEY environment variable is required")
+        api_key = os.environ.get('STRIPE_SECRET_KEY') or os.environ.get('STRIPE_API_KEY') or ''
         return api_key
     
     def create_customer(self, customer_data: Dict[str, Any]) -> Dict[str, Any]:
