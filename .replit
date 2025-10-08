@@ -1,30 +1,23 @@
-run = "modern_treasury/gui/gui_main.py"
+
+run = "python3 main.py"
 
 [nix]
 channel = "stable-22_11"
 
-language = "python3"
-run = "bash setup.sh && python3 modern_treasury/gui/gui_main.py"
+[languages.python3]
+pattern = "**/*.py"
 
-[nix]
-channel = "stable-22_11"
-build = '''
-  # Add any build steps here if you have any
-  echo "Building the application..."
-'''
+[languages.python3.languageServer]
+start = "pylsp"
 
-deps = '''
-  # Add any dependencies here that your application requires
-  flask
-  requests
-  pytest
-'''
+[env]
+PYTHONPATH = "${REPL_HOME}/src:${PYTHONPATH}"
+FLASK_APP = "main.py"
+FLASK_ENV = "development"
 
-env = '''
-  # Set environment variables here if your application requires them.
-  STRIPE_API_KEY="your_stripe_api_key"
-  MODERN_TREASURY_API_KEY="MT_PUB_KEY"
-'''
+[gitHubImport]
+requiredFiles = [".replit", "replit.nix", "main.py"]
 
-# Optionally define a startup script that runs before your main application starts.
-# startup = "source venv/bin/activate && pip install -r requirements.txt"
+[deployment]
+run = ["python3", "main.py"]
+deploymentTarget = "cloudrun"
