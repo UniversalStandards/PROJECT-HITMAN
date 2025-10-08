@@ -76,6 +76,16 @@ except ImportError as e:
 def inject_current_year():
     return {'current_year': datetime.now().year}
 
+# Add cache control headers for static files in development
+@app.after_request
+def add_header(response):
+    """Add headers to prevent caching of static files during development."""
+    if DEBUG and request.path.startswith('/static/'):
+        response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+        response.headers['Pragma'] = 'no-cache'
+        response.headers['Expires'] = '0'
+    return response
+
 # Register blueprints
 try:
     from routes import data_import_bp
