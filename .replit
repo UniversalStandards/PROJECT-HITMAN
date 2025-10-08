@@ -1,6 +1,6 @@
 
 run = "python3 main.py"
-modules = ["python-3.12"]
+modules = ["python-3.12", "postgresql-16"]
 
 [nix]
 channel = "stable-22_11"
