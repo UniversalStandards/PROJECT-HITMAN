@@ -10,9 +10,9 @@ from flask import (
     redirect,
     url_for
 )
-from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager, login_required, current_user
+from models import db
 
 # Configure logging
 logging.basicConfig(
@@ -37,7 +37,7 @@ app.config["SECRET_KEY"] = SECRET_KEY
 # Initialize the database connection
 app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URI
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-db = SQLAlchemy(app)
+db.init_app(app)
 migrate = Migrate(app, db)
 
 # Initialize Flask-Login

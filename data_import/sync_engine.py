@@ -12,7 +12,7 @@ from .config import ImportConfig
 from .linear_importer import LinearImporter
 from .github_importer import GitHubImporter
 from .exceptions import ImportError, SyncError
-from models.imported_data import SyncStatus, ImportedData, Base
+from data_import_models.imported_data import SyncStatus, ImportedData, Base
 
 
 class SyncEngine:
