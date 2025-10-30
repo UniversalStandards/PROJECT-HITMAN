@@ -11,6 +11,7 @@ export default defineConfig({
     environmentMatchGlobs: [
       ["client/**/__tests__/**/*.[jt]sx", "jsdom"],
       ["client/**/*.test.[jt]sx", "jsdom"],
+      ["tests/integration/**/*.test.tsx", "jsdom"],
     ],
     setupFiles: ["./vitest.setup.ts"],
     globals: true,
@@ -18,13 +19,6 @@ export default defineConfig({
       reporter: ["text", "lcov"],
       include: ["client/src/**/*.{ts,tsx}", "server/**/*.{ts,tsx}"],
     },
-  },
-  resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "client/src"),
-      "@shared": path.resolve(__dirname, "shared"),
-    globals: true,
-    environmentMatchGlobs: [["tests/integration/**/*.test.tsx", "jsdom"]],
   },
   resolve: {
     alias: {
