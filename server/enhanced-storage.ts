@@ -46,7 +46,7 @@ import {
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql, sum, gte, lte, or, like, inArray } from "drizzle-orm";
-import { IStorage } from "./storage";
+import { DatabaseStorage, type IStorage } from "./storage";
 
 export interface IEnhancedStorage extends IStorage {
   // Payment Provider operations
@@ -132,8 +132,7 @@ export interface IEnhancedStorage extends IStorage {
   getGrantAnalytics(organizationId: string): Promise<any>;
 }
 
-export class EnhancedDatabaseStorage implements IEnhancedStorage {
-  // Implement all base IStorage methods first (these would be inherited from the base DatabaseStorage class)
+export class EnhancedDatabaseStorage extends DatabaseStorage implements IEnhancedStorage {
   
   // Payment Provider operations
   async getPaymentProviders(organizationId: string): Promise<PaymentProvider[]> {
@@ -757,64 +756,6 @@ export class EnhancedDatabaseStorage implements IEnhancedStorage {
     };
   }
 
-  // Implementation of base IStorage methods...
-  // These would be copied from the existing DatabaseStorage class
-  // but I'll add placeholders to keep the interface complete
-  
-  async getUser(id: string): Promise<any> { 
-    const [user] = await db.select().from(users).where(eq(users.id, id));
-    return user;
-  }
-  
-  async upsertUser(userData: any): Promise<any> {
-    const [user] = await db
-      .insert(users)
-      .values(userData)
-      .onConflictDoUpdate({
-        target: users.id,
-        set: {
-          ...userData,
-          updatedAt: new Date(),
-        },
-      })
-      .returning();
-    return user;
-  }
-
-  // ... Additional base IStorage methods would be implemented here
-  // For brevity, I'm focusing on the enhanced features
-  
-  async getOrganizations(): Promise<any[]> { return []; }
-  async getOrganization(id: string): Promise<any> { return undefined; }
-  async createOrganization(org: any): Promise<any> { return {}; }
-  async getBudgets(orgId: string): Promise<any[]> { return []; }
-  async getBudget(id: string): Promise<any> { return undefined; }
-  async createBudget(budget: any): Promise<any> { return {}; }
-  async updateBudget(id: string, budget: any): Promise<any> { return {}; }
-  async getBudgetCategories(budgetId: string): Promise<any[]> { return []; }
-  async createBudgetCategory(category: any): Promise<any> { return {}; }
-  async getVendors(orgId: string): Promise<any[]> { return []; }
-  async getVendor(id: string): Promise<any> { return undefined; }
-  async createVendor(vendor: any): Promise<any> { return {}; }
-  async updateVendor(id: string, vendor: any): Promise<any> { return {}; }
-  async getPayments(orgId: string): Promise<any[]> { return []; }
-  async getPayment(id: string): Promise<any> { return undefined; }
-  async createPayment(payment: any): Promise<any> { return {}; }
-  async updatePayment(id: string, payment: any): Promise<any> { return {}; }
-  async getPendingPayments(orgId: string): Promise<any[]> { return []; }
-  async getExpenses(orgId: string): Promise<any[]> { return []; }
-  async getExpense(id: string): Promise<any> { return undefined; }
-  async createExpense(expense: any): Promise<any> { return {}; }
-  async updateExpense(id: string, expense: any): Promise<any> { return {}; }
-  async getDigitalWallets(orgId: string): Promise<any[]> { return []; }
-  async getDigitalWallet(id: string): Promise<any> { return undefined; }
-  async createDigitalWallet(wallet: any): Promise<any> { return {}; }
-  async updateDigitalWallet(id: string, wallet: any): Promise<any> { return {}; }
-  async getTransactions(orgId: string): Promise<any[]> { return []; }
-  async createTransaction(tx: any): Promise<any> { return {}; }
-  async getOrganizationStats(orgId: string): Promise<any> { return {}; }
-  async getTopVendors(orgId: string): Promise<any[]> { return []; }
-  async getRecentActivity(orgId: string): Promise<any[]> { return []; }
 }
 
 // Export the enhanced storage instance

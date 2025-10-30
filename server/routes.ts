@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { wsManager } from "./websocket";
-import { storage } from "./storage";
+import { enhancedStorage } from "./enhanced-storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { 
   insertBudgetSchema, 
@@ -13,6 +13,8 @@ import {
 } from "@shared/schema";
 import { z } from "zod";
 import { registerEnhancedRoutes } from "./enhanced-routes";
+
+const storage = enhancedStorage;
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
