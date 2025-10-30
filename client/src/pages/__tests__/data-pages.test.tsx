@@ -75,8 +75,8 @@ describe("data driven pages", () => {
         startDate: new Date("2024-01-01T00:00:00Z").toISOString(),
         endDate: new Date("2024-12-31T23:59:59Z").toISOString(),
         createdBy: "user-1",
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        createdAt: new Date("2024-01-01T12:00:00.000Z").toISOString(),
+        updatedAt: new Date("2024-01-01T12:00:00.000Z").toISOString(),
       },
     ];
 
