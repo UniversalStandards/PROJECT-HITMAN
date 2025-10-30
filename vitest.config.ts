@@ -1,5 +1,9 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { dirname, resolve } from "node:path";
+
+const rootDir = dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
   test: {
@@ -19,6 +23,13 @@ export default defineConfig({
     alias: {
       "@": path.resolve(__dirname, "client/src"),
       "@shared": path.resolve(__dirname, "shared"),
+    globals: true,
+    environmentMatchGlobs: [["tests/integration/**/*.test.tsx", "jsdom"]],
+  },
+  resolve: {
+    alias: {
+      "@": resolve(rootDir, "client/src"),
+      "@shared": resolve(rootDir, "shared"),
     },
   },
 });

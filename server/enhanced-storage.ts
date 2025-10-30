@@ -1,7 +1,6 @@
 // Enhanced storage implementation for comprehensive government platform
 
 import {
-  users,
   organizations,
   budgets,
   budgetCategories,
@@ -9,7 +8,6 @@ import {
   payments,
   expenses,
   digitalWallets,
-  transactions,
   paymentProviders,
   integrations,
   issuedCards,
@@ -47,6 +45,7 @@ import {
 import { db } from "./db";
 import { eq, desc, and, sql, sum, gte, lte, or, like, inArray } from "drizzle-orm";
 import { DatabaseStorage, type IStorage } from "./storage";
+import { DatabaseStorage, IStorage } from "./storage";
 
 export interface IEnhancedStorage extends IStorage {
   // Payment Provider operations
@@ -133,6 +132,9 @@ export interface IEnhancedStorage extends IStorage {
 }
 
 export class EnhancedDatabaseStorage extends DatabaseStorage implements IEnhancedStorage {
+export class EnhancedDatabaseStorage
+  extends DatabaseStorage
+  implements IEnhancedStorage {
   
   // Payment Provider operations
   async getPaymentProviders(organizationId: string): Promise<PaymentProvider[]> {
