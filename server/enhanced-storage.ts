@@ -131,7 +131,6 @@ export interface IEnhancedStorage extends IStorage {
   getGrantAnalytics(organizationId: string): Promise<any>;
 }
 
-export class EnhancedDatabaseStorage extends DatabaseStorage implements IEnhancedStorage {
 export class EnhancedDatabaseStorage
   extends DatabaseStorage
   implements IEnhancedStorage {
