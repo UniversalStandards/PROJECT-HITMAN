@@ -143,29 +143,18 @@ vi.mock("../../server/websocket", () => ({
   wsManager: { initialize: vi.fn() },
 }));
 
-const enhancedStorageStub = new Proxy(
-  {},
-  {
-    get: () => vi.fn(async () => []),
-  },
-) as Record<string, (...args: any[]) => Promise<any>>;
-
 vi.mock("../../server/enhanced-storage", () => ({
-  enhancedStorage: enhancedStorageStub,
-}));
-
-vi.mock("../../server/storage", () => ({
-  storage: {
-    getUser: vi.fn().mockResolvedValue(sampleUser),
-    getBudgets: vi.fn().mockResolvedValue(sampleBudgets),
-    getVendors: vi.fn().mockResolvedValue(sampleVendors),
-    getPayments: vi.fn().mockResolvedValue(samplePayments),
-    getPendingPayments: vi.fn().mockResolvedValue(samplePayments.filter((p) => p.status === "pending")),
-    getExpenses: vi.fn().mockResolvedValue(sampleExpenses),
-    getDigitalWallets: vi.fn().mockResolvedValue(sampleWallets),
-    getOrganizationStats: vi.fn().mockResolvedValue(sampleStats),
-    getTopVendors: vi.fn().mockResolvedValue(sampleVendors),
-    getRecentActivity: vi.fn().mockResolvedValue(sampleActivity),
+  enhancedStorage: {
+    getUser: vi.fn(async () => sampleUser),
+    getBudgets: vi.fn(async () => sampleBudgets),
+    getVendors: vi.fn(async () => sampleVendors),
+    getPayments: vi.fn(async () => samplePayments),
+    getPendingPayments: vi.fn(async () => samplePayments.filter((p) => p.status === "pending")),
+    getExpenses: vi.fn(async () => sampleExpenses),
+    getDigitalWallets: vi.fn(async () => sampleWallets),
+    getOrganizationStats: vi.fn(async () => sampleStats),
+    getTopVendors: vi.fn(async () => sampleVendors),
+    getRecentActivity: vi.fn(async () => sampleActivity),
   },
 }));
 

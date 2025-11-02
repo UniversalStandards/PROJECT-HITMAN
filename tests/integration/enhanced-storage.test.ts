@@ -103,7 +103,7 @@ describe("EnhancedDatabaseStorage", () => {
 
     const spy = vi
       .spyOn(DatabaseStorage.prototype, "getBudgets")
-      .mockResolvedValue(sampleBudgets);
+      .mockImplementation(async () => sampleBudgets);
 
     const result = await enhancedStorage.getBudgets("org-1");
     expect(spy).toHaveBeenCalledWith("org-1");
@@ -116,7 +116,7 @@ describe("EnhancedDatabaseStorage", () => {
 
     const spy = vi
       .spyOn(DatabaseStorage.prototype, "getVendors")
-      .mockResolvedValue(sampleVendors);
+      .mockImplementation(async () => sampleVendors);
 
     const result = await enhancedStorage.getVendors("org-1");
     expect(spy).toHaveBeenCalledWith("org-1");
@@ -129,7 +129,7 @@ describe("EnhancedDatabaseStorage", () => {
 
     const spy = vi
       .spyOn(DatabaseStorage.prototype, "getPayments")
-      .mockResolvedValue(samplePayments);
+      .mockImplementation(async () => samplePayments);
 
     const result = await enhancedStorage.getPayments("org-1");
     expect(spy).toHaveBeenCalledWith("org-1");
@@ -142,7 +142,7 @@ describe("EnhancedDatabaseStorage", () => {
 
     const spy = vi
       .spyOn(DatabaseStorage.prototype, "getExpenses")
-      .mockResolvedValue(sampleExpenses);
+      .mockImplementation(async () => sampleExpenses);
 
     const result = await enhancedStorage.getExpenses("org-1");
     expect(spy).toHaveBeenCalledWith("org-1");
@@ -155,7 +155,7 @@ describe("EnhancedDatabaseStorage", () => {
 
     const spy = vi
       .spyOn(DatabaseStorage.prototype, "getDigitalWallets")
-      .mockResolvedValue(sampleWallets);
+      .mockImplementation(async () => sampleWallets);
 
     const result = await enhancedStorage.getDigitalWallets("org-1");
     expect(spy).toHaveBeenCalledWith("org-1");
