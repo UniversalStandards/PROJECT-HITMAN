@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import type { Budget, Vendor, Payment, Expense, DigitalWallet } from "@shared/schema";
 
 vi.mock("../../server/db", () => ({ db: {} }));
@@ -93,6 +93,10 @@ const sampleWallets: DigitalWallet[] = [
 ];
 
 describe("EnhancedDatabaseStorage", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it("delegates budget retrieval to the base storage", async () => {
     const { enhancedStorage } = await import("../../server/enhanced-storage");
     const { DatabaseStorage } = await import("../../server/storage");
@@ -104,8 +108,6 @@ describe("EnhancedDatabaseStorage", () => {
     const result = await enhancedStorage.getBudgets("org-1");
     expect(spy).toHaveBeenCalledWith("org-1");
     expect(result).toEqual(sampleBudgets);
-    
-    spy.mockRestore();
   });
 
   it("delegates vendor retrieval to the base storage", async () => {
@@ -119,8 +121,6 @@ describe("EnhancedDatabaseStorage", () => {
     const result = await enhancedStorage.getVendors("org-1");
     expect(spy).toHaveBeenCalledWith("org-1");
     expect(result).toEqual(sampleVendors);
-    
-    spy.mockRestore();
   });
 
   it("delegates payment retrieval to the base storage", async () => {
@@ -134,8 +134,6 @@ describe("EnhancedDatabaseStorage", () => {
     const result = await enhancedStorage.getPayments("org-1");
     expect(spy).toHaveBeenCalledWith("org-1");
     expect(result).toEqual(samplePayments);
-    
-    spy.mockRestore();
   });
 
   it("delegates expense retrieval to the base storage", async () => {
@@ -149,8 +147,6 @@ describe("EnhancedDatabaseStorage", () => {
     const result = await enhancedStorage.getExpenses("org-1");
     expect(spy).toHaveBeenCalledWith("org-1");
     expect(result).toEqual(sampleExpenses);
-    
-    spy.mockRestore();
   });
 
   it("delegates wallet retrieval to the base storage", async () => {
@@ -164,7 +160,5 @@ describe("EnhancedDatabaseStorage", () => {
     const result = await enhancedStorage.getDigitalWallets("org-1");
     expect(spy).toHaveBeenCalledWith("org-1");
     expect(result).toEqual(sampleWallets);
-    
-    spy.mockRestore();
   });
 });
