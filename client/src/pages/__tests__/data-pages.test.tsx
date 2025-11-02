@@ -92,8 +92,8 @@ describe("data driven pages", () => {
       status: "active",
       organizationId: "org-1",
       totalSpend: "20000.00",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      createdAt: new Date("2024-01-01T12:00:00.000Z").toISOString(),
+      updatedAt: new Date("2024-01-01T12:00:00.000Z").toISOString(),
     },
   ];
 
@@ -106,10 +106,10 @@ describe("data driven pages", () => {
       status: "pending",
       vendorId: "vendor-1",
       organizationId: "org-1",
-      dueDate: new Date().toISOString(),
+      dueDate: new Date("2024-06-01T12:00:00.000Z").toISOString(),
       createdBy: "user-1",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      createdAt: new Date("2024-01-01T12:00:00.000Z").toISOString(),
+      updatedAt: new Date("2024-01-01T12:00:00.000Z").toISOString(),
     },
   ];
 
@@ -120,11 +120,11 @@ describe("data driven pages", () => {
       description: "Software licenses",
       status: "submitted",
       category: "IT",
-      expenseDate: new Date().toISOString(),
+      expenseDate: new Date("2024-03-15T12:00:00.000Z").toISOString(),
       submittedBy: "user-1",
       organizationId: "org-1",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      createdAt: new Date("2024-01-01T12:00:00.000Z").toISOString(),
+      updatedAt: new Date("2024-01-01T12:00:00.000Z").toISOString(),
     },
   ];
 
@@ -138,8 +138,8 @@ describe("data driven pages", () => {
       routingNumber: "021000021",
       isActive: true,
       organizationId: "org-1",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      createdAt: new Date("2024-01-01T12:00:00.000Z").toISOString(),
+      updatedAt: new Date("2024-01-01T12:00:00.000Z").toISOString(),
     },
   ];
 
@@ -207,8 +207,8 @@ describe("dashboard analytics components", () => {
       totalSpend: "20000.00",
       organizationId: "org-1",
       status: "active",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      createdAt: new Date("2024-01-01T12:00:00.000Z").toISOString(),
+      updatedAt: new Date("2024-01-01T12:00:00.000Z").toISOString(),
     },
   ];
 
@@ -218,7 +218,7 @@ describe("dashboard analytics components", () => {
       type: "payment",
       description: "Payment processed: Quarterly retainer",
       amount: "5000.00",
-      createdAt: new Date().toISOString(),
+      createdAt: new Date("2024-01-01T12:00:00.000Z").toISOString(),
     },
   ];
 
