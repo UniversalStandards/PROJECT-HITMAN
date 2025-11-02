@@ -60,28 +60,92 @@ function renderWithQuery(ui: React.ReactElement, responses: ApiResponses) {
 }
 
 describe("data driven pages", () => {
-  it("renders persisted budget data", async () => {
-    const budgets = [
-      {
-        id: "budget-1",
-        name: "General Fund",
-        description: "Primary operations",
-        organizationId: "org-1",
-        fiscalYear: 2024,
-        totalAmount: "100000.00",
-        allocatedAmount: "60000.00",
-        spentAmount: "25000.00",
-        status: "active",
-        startDate: new Date("2024-01-01T00:00:00Z").toISOString(),
-        endDate: new Date("2024-12-31T23:59:59Z").toISOString(),
-        createdBy: "user-1",
-        createdAt: new Date("2024-01-01T12:00:00.000Z").toISOString(),
-        updatedAt: new Date("2024-01-01T12:00:00.000Z").toISOString(),
-      },
-    ];
+  // Shared mock data for tests
+  const mockBudgets = [
+    {
+      id: "budget-1",
+      name: "General Fund",
+      description: "Primary operations",
+      organizationId: "org-1",
+      fiscalYear: 2024,
+      totalAmount: "100000.00",
+      allocatedAmount: "60000.00",
+      spentAmount: "25000.00",
+      status: "active",
+      startDate: new Date("2024-01-01T00:00:00Z").toISOString(),
+      endDate: new Date("2024-12-31T23:59:59Z").toISOString(),
+      createdBy: "user-1",
+      createdAt: new Date("2024-01-01T12:00:00.000Z").toISOString(),
+      updatedAt: new Date("2024-01-01T12:00:00.000Z").toISOString(),
+    },
+  ];
 
+  const mockVendors = [
+    {
+      id: "vendor-1",
+      name: "Acme Services",
+      email: "contact@acme.test",
+      phone: "555-0100",
+      address: "123 Main St",
+      taxId: "123456789",
+      businessType: "Consulting",
+      status: "active",
+      organizationId: "org-1",
+      totalSpend: "20000.00",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    },
+  ];
+
+  const mockPayments = [
+    {
+      id: "payment-1",
+      amount: "5000.00",
+      description: "Quarterly retainer",
+      type: "vendor",
+      status: "pending",
+      vendorId: "vendor-1",
+      organizationId: "org-1",
+      dueDate: new Date().toISOString(),
+      createdBy: "user-1",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    },
+  ];
+
+  const mockExpenses = [
+    {
+      id: "expense-1",
+      amount: "1200.00",
+      description: "Software licenses",
+      status: "submitted",
+      category: "IT",
+      expenseDate: new Date().toISOString(),
+      submittedBy: "user-1",
+      organizationId: "org-1",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    },
+  ];
+
+  const mockWallets = [
+    {
+      id: "wallet-1",
+      name: "Operational Treasury",
+      type: "treasury",
+      balance: "150000.00",
+      accountNumber: "1234567890",
+      routingNumber: "021000021",
+      isActive: true,
+      organizationId: "org-1",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    },
+  ];
+
+  it("renders persisted budget data", async () => {
     const { client } = renderWithQuery(<Budgets />, {
-      "/api/budgets": budgets,
+      "/api/budgets": mockBudgets,
     });
 
     expect(await screen.findByText("General Fund")).toBeInTheDocument();
@@ -89,25 +153,8 @@ describe("data driven pages", () => {
   });
 
   it("renders persisted vendor data", async () => {
-    const vendors = [
-      {
-        id: "vendor-1",
-        name: "Acme Services",
-        email: "contact@acme.test",
-        phone: "555-0100",
-        address: "123 Main St",
-        taxId: "123456789",
-        businessType: "Consulting",
-        status: "active",
-        organizationId: "org-1",
-        totalSpend: "20000.00",
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      },
-    ];
-
     const { client } = renderWithQuery(<Vendors />, {
-      "/api/vendors": vendors,
+      "/api/vendors": mockVendors,
     });
 
     expect(await screen.findByText("Acme Services")).toBeInTheDocument();
@@ -115,42 +162,9 @@ describe("data driven pages", () => {
   });
 
   it("renders persisted payment data", async () => {
-    const payments = [
-      {
-        id: "payment-1",
-        amount: "5000.00",
-        description: "Quarterly retainer",
-        type: "vendor",
-        status: "pending",
-        vendorId: "vendor-1",
-        organizationId: "org-1",
-        dueDate: new Date().toISOString(),
-        createdBy: "user-1",
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      },
-    ];
-
-    const vendors = [
-      {
-        id: "vendor-1",
-        name: "Acme Services",
-        email: "contact@acme.test",
-        phone: "555-0100",
-        address: "123 Main St",
-        taxId: "123456789",
-        businessType: "Consulting",
-        status: "active",
-        organizationId: "org-1",
-        totalSpend: "20000.00",
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      },
-    ];
-
     const { client } = renderWithQuery(<Payments />, {
-      "/api/payments": payments,
-      "/api/vendors": vendors,
+      "/api/payments": mockPayments,
+      "/api/vendors": mockVendors,
     });
 
     expect(await screen.findByText("Quarterly retainer")).toBeInTheDocument();
@@ -158,23 +172,8 @@ describe("data driven pages", () => {
   });
 
   it("renders persisted expense data", async () => {
-    const expenses = [
-      {
-        id: "expense-1",
-        amount: "1200.00",
-        description: "Software licenses",
-        status: "submitted",
-        category: "IT",
-        expenseDate: new Date().toISOString(),
-        submittedBy: "user-1",
-        organizationId: "org-1",
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      },
-    ];
-
     const { client } = renderWithQuery(<Expenses />, {
-      "/api/expenses": expenses,
+      "/api/expenses": mockExpenses,
     });
 
     expect(await screen.findByText("Software licenses")).toBeInTheDocument();
@@ -182,23 +181,8 @@ describe("data driven pages", () => {
   });
 
   it("renders persisted wallet data", async () => {
-    const wallets = [
-      {
-        id: "wallet-1",
-        name: "Operational Treasury",
-        type: "treasury",
-        balance: "150000.00",
-        accountNumber: "1234567890",
-        routingNumber: "021000021",
-        isActive: true,
-        organizationId: "org-1",
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      },
-    ];
-
     const { client } = renderWithQuery(<Wallets />, {
-      "/api/wallets": wallets,
+      "/api/wallets": mockWallets,
     });
 
     expect(await screen.findByText("Operational Treasury")).toBeInTheDocument();
@@ -207,16 +191,40 @@ describe("data driven pages", () => {
 });
 
 describe("dashboard analytics components", () => {
-  it("renders analytics stats", async () => {
-    const stats = {
-      totalBudget: "1000000.00",
-      monthlyExpenses: "250000.00",
-      activeVendors: 4,
-      pendingPayments: 2,
-    };
+  // Shared mock data for dashboard analytics tests
+  const mockStats = {
+    totalBudget: "1000000.00",
+    monthlyExpenses: "250000.00",
+    activeVendors: 4,
+    pendingPayments: 2,
+  };
 
+  const mockTopVendors = [
+    {
+      id: "vendor-1",
+      name: "Acme Services",
+      businessType: "Consulting",
+      totalSpend: "20000.00",
+      organizationId: "org-1",
+      status: "active",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    },
+  ];
+
+  const mockActivity = [
+    {
+      id: "activity-1",
+      type: "payment",
+      description: "Payment processed: Quarterly retainer",
+      amount: "5000.00",
+      createdAt: new Date().toISOString(),
+    },
+  ];
+
+  it("renders analytics stats", async () => {
     const { client } = renderWithQuery(<StatsCards />, {
-      "/api/analytics/stats": stats,
+      "/api/analytics/stats": mockStats,
     });
 
     expect(await screen.findByText("$1,000,000")).toBeInTheDocument();
@@ -224,21 +232,8 @@ describe("dashboard analytics components", () => {
   });
 
   it("renders top vendor analytics", async () => {
-    const vendors = [
-      {
-        id: "vendor-1",
-        name: "Acme Services",
-        businessType: "Consulting",
-        totalSpend: "20000.00",
-        organizationId: "org-1",
-        status: "active",
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      },
-    ];
-
     const { client } = renderWithQuery(<TopVendors />, {
-      "/api/analytics/top-vendors": vendors,
+      "/api/analytics/top-vendors": mockTopVendors,
     });
 
     expect(await screen.findByText("Acme Services")).toBeInTheDocument();
@@ -246,18 +241,8 @@ describe("dashboard analytics components", () => {
   });
 
   it("renders recent activity feed", async () => {
-    const activity = [
-      {
-        id: "activity-1",
-        type: "payment",
-        description: "Payment processed: Quarterly retainer",
-        amount: "5000.00",
-        createdAt: new Date().toISOString(),
-      },
-    ];
-
     const { client } = renderWithQuery(<RecentActivity />, {
-      "/api/analytics/recent-activity": activity,
+      "/api/analytics/recent-activity": mockActivity,
     });
 
     expect(
