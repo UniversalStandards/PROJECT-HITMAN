@@ -1,6 +1,6 @@
-import express from "express";
 import request from "supertest";
 import { describe, beforeAll, afterAll, it, expect, vi } from "vitest";
+import type { Server } from "http";
 import type { EnhancedDatabaseStorage } from "../enhanced-storage";
 import type { DatabaseStorage } from "../storage";
 
@@ -65,8 +65,11 @@ vi.mock("../db", () => {
 });
 
 vi.mock("../replitAuth", () => ({
-  setupAuth: vi.fn(),
-  isAuthenticated: vi.fn(),
+  setupAuth: vi.fn().mockResolvedValue(undefined),
+  isAuthenticated: (req: any, _res: any, next: any) => {
+    req.user = { claims: { sub: "user-1" } };
+    next();
+  },
 }));
 
 vi.mock("../enhanced-routes", () => ({
@@ -86,7 +89,7 @@ describe("Enhanced storage integration", () => {
   let enhancedStorage: EnhancedDatabaseStorage;
   let EnhancedDatabaseStorageClass: typeof import("../enhanced-storage").EnhancedDatabaseStorage;
   let DatabaseStorageClass: typeof DatabaseStorage;
-  const app = express();
+  let server: Server;
 
   const user = {
     id: "user-1",
@@ -195,86 +198,17 @@ describe("Enhanced storage integration", () => {
     (enhancedStorage as any).getTopVendors = async () => topVendorStats;
     (enhancedStorage as any).getRecentActivity = async () => recentActivity;
 
+    // Import and use the real production routes instead of duplicating them
+    const { registerRoutes } = await import("../routes");
+    const express = (await import("express")).default;
+    const app = express();
     app.use(express.json());
-    app.use((req, _res, next) => {
-      (req as any).user = { claims: { sub: "user-1" } };
-      next();
-    });
-
-    app.get("/api/budgets", async (req, res) => {
-      const record = await enhancedStorage.getUser((req as any).user.claims.sub);
-      if (!record?.organizationId) {
-        return res.status(400).json({ message: "User not associated with an organization" });
-      }
-      const data = await enhancedStorage.getBudgets(record.organizationId);
-      res.json(data);
-    });
-
-    app.get("/api/vendors", async (req, res) => {
-      const record = await enhancedStorage.getUser((req as any).user.claims.sub);
-      if (!record?.organizationId) {
-        return res.status(400).json({ message: "User not associated with an organization" });
-      }
-      const data = await enhancedStorage.getVendors(record.organizationId);
-      res.json(data);
-    });
-
-    app.get("/api/payments", async (req, res) => {
-      const record = await enhancedStorage.getUser((req as any).user.claims.sub);
-      if (!record?.organizationId) {
-        return res.status(400).json({ message: "User not associated with an organization" });
-      }
-      const data = await enhancedStorage.getPayments(record.organizationId);
-      res.json(data);
-    });
-
-    app.get("/api/expenses", async (req, res) => {
-      const record = await enhancedStorage.getUser((req as any).user.claims.sub);
-      if (!record?.organizationId) {
-        return res.status(400).json({ message: "User not associated with an organization" });
-      }
-      const data = await enhancedStorage.getExpenses(record.organizationId);
-      res.json(data);
-    });
-
-    app.get("/api/wallets", async (req, res) => {
-      const record = await enhancedStorage.getUser((req as any).user.claims.sub);
-      if (!record?.organizationId) {
-        return res.status(400).json({ message: "User not associated with an organization" });
-      }
-      const data = await enhancedStorage.getDigitalWallets(record.organizationId);
-      res.json(data);
-    });
-
-    app.get("/api/analytics/stats", async (req, res) => {
-      const record = await enhancedStorage.getUser((req as any).user.claims.sub);
-      if (!record?.organizationId) {
-        return res.status(400).json({ message: "User not associated with an organization" });
-      }
-      const data = await enhancedStorage.getOrganizationStats(record.organizationId);
-      res.json(data);
-    });
-
-    app.get("/api/analytics/top-vendors", async (req, res) => {
-      const record = await enhancedStorage.getUser((req as any).user.claims.sub);
-      if (!record?.organizationId) {
-        return res.status(400).json({ message: "User not associated with an organization" });
-      }
-      const data = await enhancedStorage.getTopVendors(record.organizationId);
-      res.json(data);
-    });
-
-    app.get("/api/analytics/recent-activity", async (req, res) => {
-      const record = await enhancedStorage.getUser((req as any).user.claims.sub);
-      if (!record?.organizationId) {
-        return res.status(400).json({ message: "User not associated with an organization" });
-      }
-      const data = await enhancedStorage.getRecentActivity(record.organizationId);
-      res.json(data);
-    });
+    app.use(express.urlencoded({ extended: false }));
+    server = await registerRoutes(app);
   });
 
-  afterAll(() => {
+  afterAll(async () => {
+    await new Promise<void>((resolve) => server.close(() => resolve()));
     vi.restoreAllMocks();
   });
 
@@ -289,49 +223,49 @@ describe("Enhanced storage integration", () => {
   });
 
   it("serves budgets with persisted data", async () => {
-    const response = await request(app).get("/api/budgets");
+    const response = await request(server).get("/api/budgets");
     expect(response.status).toBe(200);
     expect(response.body).toEqual(serialize(budgets));
   });
 
   it("serves vendors with persisted data", async () => {
-    const response = await request(app).get("/api/vendors");
+    const response = await request(server).get("/api/vendors");
     expect(response.status).toBe(200);
     expect(response.body).toEqual(vendors);
   });
 
   it("serves payments with persisted data", async () => {
-    const response = await request(app).get("/api/payments");
+    const response = await request(server).get("/api/payments");
     expect(response.status).toBe(200);
     expect(response.body).toEqual(serialize(payments));
   });
 
   it("serves expenses with persisted data", async () => {
-    const response = await request(app).get("/api/expenses");
+    const response = await request(server).get("/api/expenses");
     expect(response.status).toBe(200);
     expect(response.body).toEqual(serialize(expenses));
   });
 
   it("serves digital wallets with persisted data", async () => {
-    const response = await request(app).get("/api/wallets");
+    const response = await request(server).get("/api/wallets");
     expect(response.status).toBe(200);
     expect(response.body).toEqual(serialize(wallets));
   });
 
   it("provides analytics stats", async () => {
-    const response = await request(app).get("/api/analytics/stats");
+    const response = await request(server).get("/api/analytics/stats");
     expect(response.status).toBe(200);
     expect(response.body).toEqual(stats);
   });
 
   it("provides top vendor analytics", async () => {
-    const response = await request(app).get("/api/analytics/top-vendors");
+    const response = await request(server).get("/api/analytics/top-vendors");
     expect(response.status).toBe(200);
     expect(response.body).toEqual(topVendorStats);
   });
 
   it("provides recent activity analytics", async () => {
-    const response = await request(app).get("/api/analytics/recent-activity");
+    const response = await request(server).get("/api/analytics/recent-activity");
     expect(response.status).toBe(200);
     expect(response.body).toEqual(recentActivity);
   });
