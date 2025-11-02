@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { wsManager } from "./websocket";
-import { storage } from "./storage";
+import { enhancedStorage as storage } from "./enhanced-storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { 
   insertBudgetSchema, 
